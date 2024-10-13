@@ -15,8 +15,21 @@
 ;; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                         ;;
 ;;-------------------------------------------------------------------------------------------------------------------------------;;
 
-SECTION "Entry point", ROM0[$150]
+SECTION "Entry point", ROM0[$250]
+
 
 main::
-   di     ;; Disable Interrupts
-   halt   ;; Halt the CPU (stop procesing here)
+	; Load default palette
+	ld a, %11100100
+	ld [$FF47], a
+	
+	call start_drawing
+
+	call init_tiles
+	call draw_map
+
+	call end_drawing
+
+   	di     ;; Disable Interrupts
+   	halt   ;; Halt the CPU (stop procesing here)
+
