@@ -17,6 +17,14 @@
 
 SECTION "Entry point", ROM0[$150]
 
+player: db 1, 20, 20, 2, 8, 1, 1, 255
+
 main::
-   di     ;; Disable Interrupts
-   halt   ;; Halt the CPU (stop procesing here)
+   
+   call init_entity_manager
+   ld hl, player
+   call entityman_create
+   ld b, 2
+   call man_entity_find_first_by_type
+   di
+   halt
