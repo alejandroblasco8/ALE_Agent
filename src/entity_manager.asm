@@ -211,5 +211,42 @@ entityman_find_first_by_type::
     
     ret
 
+entityman_for_each::
+    ;; == TODO ==
 
+    ;;-------------------------------------------------------
+    ;; Performs an operation on all the valid (reserved)
+    ;; entities in the array:
+    ;; - Iterates through all the entities
+    ;; - For each valid entity, it calls the function
+    ;; given as argument (the operation).
+    ;; - When calling the function (operation), HL
+    ;; must be the address of the valid entity being
+    ;; iterated.
+    ;; DESTROYS: AF, BC, DE, HL
+    ;; INPUT:
+    ;; DE -> Pointer to a function (operation) to be
+    ;; performed on all valid entities one by one.
+    ;; This function expects HL to have the address
+    ;; of the entity.
+    ;;
 
+    ld hl, _entity_array
+    ld bc, ENTITY_SIZE
+    ld a, [_num_entities]
+
+    .loop_for_each:
+        push hl
+        push bc
+        push af
+        push de
+        ret
+        pop de
+        pop af
+        pop bc
+        pop hl
+        add hl, bc
+        dec a
+        jr nz, .loop_for_each
+    
+    ret
