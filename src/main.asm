@@ -17,14 +17,17 @@
 
 SECTION "Entry point", ROM0[$150]
 
-player: db 1, 20, 20, 2, 8, 1, 1, 255
+player1: db 1, 20, 20, 2, 8, 1, 1, 255
+player2: db 2, 21, 12, 4, 1, 2, 2, 255
 
 main::
    
    call init_entity_manager
-   ld hl, player
+   ld hl, player1
    call entityman_create
-   ld b, 2
-   call man_entity_find_first_by_type
+   ld hl, player2
+   call entityman_create
+   ld a, 0
+   call entityman_free_entity
    di
    halt
