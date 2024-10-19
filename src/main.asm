@@ -25,7 +25,7 @@ main::
 	; Load default palette
 	ld a, %11100100
 	ld [$FF47], a
-	
+
 	call start_drawing
 
 	call init_tiles
@@ -35,7 +35,7 @@ main::
 
 	;call draw_map
 	call init_map
-	
+
 	ld de, Map01
 	call draw_map
 
