@@ -1,46 +1,60 @@
 SECTION "Tiles", ROM0
 
-; Metatiles index
+Tiles8p8::
+DB $00,$C3,$3C,$81,$3C,$42,$99,$E7
+DB $81,$FF,$C3,$FF,$7E,$FF,$3C,$FF
+
+; Metatile index
 MetatilesIndex::
-DB $00,$02,$01,$03,$04,$05,$05,$04
-DB $06,$06,$06,$06,$07,$07,$07,$07
+DB $00,$00,$00,$00,$01,$01,$01,$01
+DB $02,$02,$02,$02,$03,$03,$03,$03
+DB $04,$06,$05,$07,$08,$0A,$09,$0B
+DB $0C,$0E,$0D,$0F
 
-; Start of tiles array
+; Start of tile array.
 Tiles::
-DB $FF,$FF,$FF,$80,$FF,$80,$FF,$80
-DB $FF,$80,$FF,$80,$FF,$80,$FF,$80
+; Color 00
+DB $00,$00,$00,$00,$00,$00,$00,$00
+DB $00,$00,$00,$00,$00,$00,$00,$00
 
-DB $FF,$80,$FF,$80,$FF,$80,$FF,$80
-DB $FF,$80,$FF,$80,$FF,$80,$FF,$FF
+; Color 01
+DB $FF,$00,$FF,$00,$FF,$00,$FF,$00
+DB $FF,$00,$FF,$00,$FF,$00,$FF,$00
 
-DB $FF,$FF,$FF,$01,$FF,$01,$FF,$01
-DB $FF,$01,$FF,$01,$FF,$01,$FF,$01
+; Color 02
+DB $00,$FF,$00,$FF,$00,$FF,$00,$FF
+DB $00,$FF,$00,$FF,$00,$FF,$00,$FF
 
-DB $FF,$01,$FF,$01,$FF,$01,$FF,$01
-DB $FF,$01,$FF,$01,$FF,$01,$FF,$FF
+; Color 03
+DB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+DB $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
 
-DB $FF,$80,$FF,$40,$FF,$20,$FF,$10
-DB $FF,$08,$FF,$04,$FF,$02,$FF,$01
+; Unbreakable block
+DB $0F,$FF,$08,$F8,$0A,$FA,$0A,$FA
+DB $08,$F8,$08,$F8,$0F,$FF,$0F,$FF
+DB $0F,$FF,$0F,$FF,$0E,$FF,$0E,$FF
+DB $0E,$FF,$0E,$FF,$0E,$FF,$1C,$FF
+DB $F0,$FF,$10,$1F,$50,$5F,$50,$5F
+DB $10,$1F,$10,$1F,$F0,$FF,$F0,$FF
+DB $F0,$FF,$F0,$FF,$70,$FF,$70,$FF
+DB $70,$FF,$70,$FF,$70,$FF,$38,$FF
 
-DB $FF,$01,$FF,$02,$FF,$04,$FF,$08
-DB $FF,$10,$FF,$20,$FF,$40,$FF,$80
+; Brekable block
+DB $00,$00,$1F,$00,$3F,$00,$7F,$00
+DB $7F,$00,$7F,$00,$7F,$00,$7F,$00
+DB $FF,$00,$FF,$00,$FF,$00,$FF,$00
+DB $00,$FF,$00,$FF,$FF,$FF,$FF,$FF
+DB $F3,$0F,$F3,$0F,$F3,$0F,$F3,$0F
+DB $F3,$0F,$F3,$0F,$F3,$0F,$F3,$0F
+DB $F3,$0F,$F3,$0F,$F3,$0F,$F3,$0F
+DB $03,$FF,$03,$FF,$FF,$FF,$FF,$FF
 
-DB $FF,$FF,$FF,$81,$FF,$81,$FF,$81
-DB $FF,$81,$FF,$81,$FF,$81,$FF,$FF
-
-DB $FF,$18,$FF,$18,$FF,$18,$FF,$FF
-DB $FF,$FF,$FF,$18,$FF,$18,$FF,$18
-
-SECTION "Tile Maps", ROM0
-
-Maps::
-DB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-DB $00,$01,$01,$01,$01,$01,$01,$01,$01,$00
-DB $00,$01,$03,$03,$01,$01,$01,$02,$01,$00
-DB $00,$01,$03,$03,$01,$01,$01,$02,$01,$00
-DB $00,$01,$01,$01,$01,$02,$01,$02,$01,$00
-DB $00,$01,$01,$01,$01,$01,$01,$01,$01,$00
-DB $00,$01,$01,$03,$03,$03,$01,$03,$01,$00
-DB $00,$01,$01,$01,$01,$01,$01,$01,$01,$00
-DB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-
+; Main character
+DB $FF,$10,$FF,$10,$FF,$FF,$FF,$04
+DB $FF,$04,$FF,$FF,$FF,$20,$FF,$20
+DB $FF,$FF,$FF,$04,$FF,$04,$FF,$FF
+DB $FF,$10,$FF,$10,$FF,$FF,$FF,$FF
+DB $FF,$40,$FF,$40,$FF,$FF,$FF,$04
+DB $FF,$04,$FF,$FF,$FF,$20,$FF,$20
+DB $FF,$FF,$FF,$08,$FF,$08,$FF,$FF
+DB $FF,$20,$FF,$20,$FF,$FF,$FF,$FF

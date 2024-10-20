@@ -1,0 +1,52 @@
+SECTION "ANIMATION_VARS", WRAM0
+current_frame: db 0  ; Variable que almacena el índice del frame actual
+
+SECTION "ANIMATIONS", ROM0
+sprite_animation:
+    db 8, %00100000  ; Frame 1 (TileID, Atributos)
+    db 6, %00100000  ; Frame 2
+    db 8, %00000000  ; Frame 3
+    db 6, %00000000  ; Frame 4
+    db -1            ; End marker (aunque no lo usaremos en este caso)
+
+; ----------------------------------------
+; Función: anim_init
+; Descripción: Inicializa el frame actual a 0
+; ----------------------------------------
+anim_init:
+    xor a                    ; A = 0
+    ld [current_frame], a     ; Guardar 0 en current_frame para comenzar desde el primer frame
+    ret
+
+; ----------------------------------------
+; Función: anim_nextframe
+; Descripción: Avanza al siguiente frame de animación y actualiza el sprite 0 de la OAM.
+; ----------------------------------------
+anim_nextframe:
+    ld a, [current_frame]     ; Cargar el índice del frame actual
+    ld hl, sprite_animation   ; Apuntar al inicio de los datos de animación
+
+    ; Calcular la posición del frame actual (cada frame ocupa 2 bytes: TileID y Atributos)
+    add a, a                  ; Multiplicar el índice por 2 (a = frame_index * 2)
+    add hl, a                 ; Avanzar HL a la posición del frame correspondiente
+
+    ; Cargar el TileID y atributos del frame actual
+    ld a, [hl]                ; Cargar TileID del frame
+    ld [$FE00], a             ; Guardar TileID en el sprite 0 de la OAM (dirección $FE00)
+
+    inc hl                    ; Avanzar al byte de los atributos
+    ld a, [hl]                ; Cargar Atributos del frame
+    ld [$FE01], a             ; Guardar los Atributos en el sprite 0 de la OAM (dirección $FE01)
+
+    ; Avanzar al siguiente frame
+    ld a, [current_frame]
+    inc a                     ; Incrementar el índice del frame
+    cp 4                      ; Hay 4 frames, por lo que si llegamos a 4, reiniciamos
+    jr nz, no_reset           
+
+    xor a                     ; Si llegamos al final, reiniciamos el frame a 0
+no_reset:
+    ld [current_frame], a     ; Guardar el nuevo índice en current_frame
+
+    ret
+

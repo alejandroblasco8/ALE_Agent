@@ -18,6 +18,9 @@
 SECTION "Entry point", ROM0[$250]
 
 
+player_entities:
+bomberman: DB 1,1,1,1
+
 main::
 	; Load default palette
 	ld a, %11100100
@@ -26,9 +29,21 @@ main::
 	call start_drawing
 
 	call init_tiles
+
+	ld a, $7F
+	call draw_map_borders
+
+	;call draw_map
+	call init_map
+	
+	ld de, Map01
 	call draw_map
 
 	call end_drawing
+
+	ld de, player_entities
+	ld b, 1
+	call render_entities
 
    	di     ;; Disable Interrupts
    	halt   ;; Halt the CPU (stop procesing here)
