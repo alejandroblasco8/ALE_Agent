@@ -17,18 +17,6 @@
 
 SECTION "Entry point", ROM0[$150]
 
-player1: db 1, 20, 20, 2, 8, 1, 1, 255
-player2: db 2, 21, 12, 4, 1, 2, 2, 255
-
 main::
-   
-   call init_entity_manager
-   ld hl, player1
-   call entityman_create
-   ld hl, player2
-   call entityman_create
-   ld a, 0
-   ld hl, player2
-   call entityman_update
-   di
-   halt
+   di     ;; Disable Interrupts
+   halt   ;; Halt the CPU (stop procesing here)
