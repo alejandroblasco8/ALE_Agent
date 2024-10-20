@@ -222,6 +222,8 @@ entityman_get_by_index::
 ;; ############################################################################
 
 entityman_is_of_type_b::
+    ld de, TYPE
+    add hl, de
     ld a, [hl]
     cp b
     ret
@@ -250,10 +252,12 @@ entityman_find_first_by_type::
         ld a, c
         cp 255
         ret z
-
+        push hl
         call entityman_is_of_type_b
+        pop hl
+        ret z
         add hl, de
-        jr nz, .loop_find_first_by_type
+        jp .loop_find_first_by_type
     
     ret
 
