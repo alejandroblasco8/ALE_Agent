@@ -9,3 +9,14 @@ DEF LAST_TILE_ADDR = $7F
 
 ; ENTITIES CONSTANTS
 DEF NOT_OAM_EXTRA_ATTRIBUTES = 3
+
+def MAX_ENTITIES = 10
+def ENTITY_SIZE = 8
+def TIPO = 0 ;;Dejar el TIPO como byte 0, NO CAMBIAR
+def X = 1
+def VELX = 5
+def Y = 2
+def VELY = 6
+def ANCHO = 3
+def ALTO = 4
+def COLOR = 7
