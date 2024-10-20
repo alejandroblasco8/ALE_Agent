@@ -25,7 +25,11 @@ _entity_array: ds MAX_ENTITIES*ENTITY_SIZE
 SECTION "Entity manager", ROM0
 
 
-;;Initializer _num_entities
+;; ############################################################################
+;; Initialize entity_manager
+;;
+;; MODIFIES: AF, HL
+;; ############################################################################
 
 init_entity_manager::
     ld hl, _num_entities
@@ -39,18 +43,41 @@ init_entity_manager::
     ld [_last_elem_ptr + 1], a
     
     ret
-    
-;;OUTPUT
-;; HL: Pointer to entity array
+
+;; ############################################################################
+;; Return entity_array
+;;
+;; OUTPUT:
+;;  -  HL => Pointer to entity array
+;;
+;; MODIFIES: A
+;; ############################################################################
+
 entityman_getEntityArray_HL::
     ld hl, _entity_array
     ret
 
-;;OUTPUT
-;; A: Pointer to num entities
+;; ############################################################################
+;; Return num_entities
+;;
+;; OUTPUT:
+;;  -  A => Pointer to num entities
+;;
+;; MODIFIES: A
+;; ############################################################################
+
 entityman_getNumEntities_A::
     ld a, [_num_entities]
     ret
+
+;; ############################################################################
+;; Create new entity
+;;
+;; INPUT:
+;;  -  HL => Pointer to entity initializer bytes
+;;
+;; MODIFIES: AF, BC, HL, DE
+;; ############################################################################
 
 ;;INPUT
 ;; HL: Pointer to entity initializer bytes
@@ -91,8 +118,15 @@ entityman_create::
 
     ret
 
-;;INPUT
-;; A: Index
+;; ############################################################################
+;; Delete entity associated to A index
+;;
+;; INPUT:
+;;  -  A => Entity index
+;;
+;; MODIFIES: AF, BC, HL, DE
+;; ############################################################################
+
 entityman_free_entity::
 
     ;;Check if the index is inside the array range
@@ -161,10 +195,18 @@ entityman_free_entity::
 
     ret
 
+;; ############################################################################
+;; Checks if the entity is of type B
+;;
+;; INPUT:
+;;  -  A => Entity index
+;;
+;; OUTPUT:
+;;  - HL => Points to the entity associated to A index
+;;
+;; MODIFIES: HL, BC, AF
+;; ############################################################################
 
-
-;;INPUT
-;; A: Index
 entityman_get_by_index::
     ld hl, _entity_array
     ld bc, ENTITY_SIZE
@@ -177,20 +219,35 @@ entityman_get_by_index::
         jr .loop_get_by_index
 
 
-;;INPUT
-;; HL: Pointer to the entity
-;;  B: Type to check if the entity is or not
+;; ############################################################################
+;; Checks if the entity is of type B
 ;;
-;;OUTPUT
-;;  Flag Z: Active if entity is of type B
+;; INPUT:
+;;  - HL => Pointer to the entity
+;;  -  B => Type to check if the entity is or not
+;;
+;; OUTPUT:
+;;  - Flag Z => Active if entity is of type B
+;;
+;; MODIFIES: AF
+;; ############################################################################
 
 entityman_is_of_type_b::
     ld a, [hl]
     cp b
     ret
 
-;;INPUT
-;;  B: Type of the entity to be found
+;; ############################################################################
+;; Find first entity that matches the type
+;;
+;; INPUT:
+;;	- B => Type of the entity to be found
+;;
+;; OUTPUT:
+;;  - HL => Points to the first type b entity
+;;
+;; MODIFIES: AF, C, HL
+;; ############################################################################
 
 entityman_find_first_by_type::
     
@@ -211,25 +268,22 @@ entityman_find_first_by_type::
     
     ret
 
-entityman_for_each::
-    ;; == TODO ==
 
-    ;;-------------------------------------------------------
-    ;; Performs an operation on all the valid (reserved)
-    ;; entities in the array:
-    ;; - Iterates through all the entities
-    ;; - For each valid entity, it calls the function
-    ;; given as argument (the operation).
-    ;; - When calling the function (operation), HL
-    ;; must be the address of the valid entity being
-    ;; iterated.
-    ;; DESTROYS: AF, BC, DE, HL
-    ;; INPUT:
-    ;; DE -> Pointer to a function (operation) to be
-    ;; performed on all valid entities one by one.
-    ;; This function expects HL to have the address
-    ;; of the entity.
-    ;;
+;; ############################################################################
+;; Performs an operation on all the entities in the array:
+;;
+;; INPUT:
+;;	- DE => Pointer to a function (operation) to be
+;;      performed on all the entities one by one.
+;;      This function expects HL to have the address
+;;      of the entity.
+;;
+;; OUTPUT: None
+;;
+;; MODIFIES: AF, BC, DE, HL
+;; ############################################################################
+
+entityman_for_each::
 
     ld hl, _entity_array
     ld bc, ENTITY_SIZE
@@ -251,10 +305,18 @@ entityman_for_each::
     
     ret
 
+;; ############################################################################
+;; Update the entity associated to the index A
+;;
+;; INPUT:
+;;	- HL  => Pointer to entity update bytes
+;;	- A => Index
+;;
+;; OUTPUT: None
+;;
+;; MODIFIES: AF, C, DE, HL
+;; ############################################################################
 
-;;INPUT
-;; HL: Pointer to entity update bytes
-;;  A: Index
 entityman_update::
 
     ld d, h
