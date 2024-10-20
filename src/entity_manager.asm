@@ -1,19 +1,8 @@
+include "constants.asm"
+
 ;;
 ;;  ENTITY MANAGER
 ;;
-
-
-def MAX_ENTITIES = 10
-def ENTITY_SIZE = 8
-def TIPO = 0 ;;Dejar el TIPO como byte 0, NO CAMBIAR
-def X = 1 
-def Y = 2
-def ANCHO = 3
-def ALTO = 4
-def VELX = 5
-def VELY = 6
-def COLOR = 7
-
 
 SECTION "Entity manager data", WRAM0
 
