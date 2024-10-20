@@ -1,5 +1,5 @@
 def MAX_ENTITIES = 10
-def ENTITY_SIZE = 8
+def ENTITY_SIZE = 9
 def POS_X = 0
 def POS_Y = 1
 def N_TILES = 2
