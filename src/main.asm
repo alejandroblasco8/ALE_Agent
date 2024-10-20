@@ -28,6 +28,7 @@ main::
    ld hl, player2
    call entityman_create
    ld a, 0
-   call entityman_free_entity
+   ld hl, player2
+   call entityman_update
    di
    halt

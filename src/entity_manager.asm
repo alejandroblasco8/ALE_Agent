@@ -250,3 +250,25 @@ entityman_for_each::
         jr nz, .loop_for_each
     
     ret
+
+
+;;INPUT
+;; HL: Pointer to entity update bytes
+;;  A: Index
+entityman_update::
+
+    ld d, h
+    ld e, l
+    ld c, ENTITY_SIZE
+
+    call entityman_get_by_index
+
+    .loop_update:
+        ld a, [de]
+        ld [hl+], a
+        inc de
+        dec c
+        jr nz, .loop_update
+    
+    ret
+
