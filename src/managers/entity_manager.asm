@@ -6,9 +6,14 @@ include "constants.asm"
 
 SECTION "Entity manager data", WRAM0
 
+_entities_array: ds MAX_ENTITIES * ENTITY_SIZE
 _num_entities: ds 1
+
+_blocks_array: ds MAX_BLOCKS * BLOCK_SIZE
+_num_blocks: ds 1
+
 _last_elem_ptr: ds 2
-_entity_array: ds MAX_ENTITIES*ENTITY_SIZE
+_for_each_func_pointer: DS 4
 
 
 SECTION "Entity manager", ROM0
@@ -25,7 +30,7 @@ init_entity_manager::
     xor a
     ld [hl], a
 
-    ld hl, _entity_array
+    ld hl, _entities_array
     ld a, h
     ld [_last_elem_ptr], a
     ld a, l
@@ -34,7 +39,7 @@ init_entity_manager::
     ret
 
 ;; ############################################################################
-;; Return entity_array
+;; Return entities_array
 ;;
 ;; OUTPUT:
 ;;  -  HL => Pointer to entity array
@@ -43,7 +48,7 @@ init_entity_manager::
 ;; ############################################################################
 
 entityman_getEntityArray_HL::
-    ld hl, _entity_array
+    ld hl, _entities_array
     ret
 
 ;; ############################################################################
@@ -158,7 +163,7 @@ entityman_free_entity::
     
 
     .is_last:
-    ;;Realocate the pointer to the entity_array last element
+    ;;Realocate the pointer to the entities_array last element
 
     ld c, ENTITY_SIZE
     ld a, [_last_elem_ptr]
@@ -197,7 +202,7 @@ entityman_free_entity::
 ;; ############################################################################
 
 entityman_get_by_index::
-    ld hl, _entity_array
+    ld hl, _entities_array
     ld bc, ENTITY_SIZE
     
     .loop_get_by_index:
@@ -244,7 +249,7 @@ entityman_find_first_by_type::
     
     ld a, [_num_entities]
     ld c, a
-    ld hl, _entity_array
+    ld hl, _entities_array
     
     .loop_find_first_by_type:
         ;;Checks if there is not more available entities.
@@ -261,41 +266,105 @@ entityman_find_first_by_type::
     
     ret
 
-
 ;; ############################################################################
 ;; Performs an operation on all the entities in the array:
 ;;
 ;; INPUT:
-;;	- DE => Pointer to a function (operation) to be
-;;      performed on all the entities one by one.
-;;      This function expects HL to have the address
-;;      of the entity.
+;;	- A => 0 to use entities array, 1 to use block arrays
+;;	- DE => Pointer to a function to be performed on all the entities.
 ;;
 ;; OUTPUT: None
 ;;
-;; MODIFIES: AF, BC, DE, HL
-;; ############################################################################
+;; MODIFIES: AF, BC, HL
+;;
+;; BEWARE! Registers AF and HL will be restored after the applied function call.
+;; #############################################################################
 
 entityman_for_each::
+    push af
 
-    ld hl, _entity_array
-    ld bc, ENTITY_SIZE
-    ld a, [_num_entities]
+    ; Construct callable pointer to the function
+    ld hl, _for_each_func_pointer
 
+    ; Add call operation code
+    ld a, $CD
+    ld [hl+], a
+
+    ; Add low byte of the address
+    ld [hl], e
+    inc hl
+
+    ; Add high byte of the address
+    ld [hl], d
+    inc hl
+
+    ; Add ret operation code
+    ld a, $C9
+    ld [hl], a
+
+    pop af
+
+    or a
+    jr z, .entities
+
+    .blocks:
+    call _for_each_block
+    ret
+
+    .entities:
+    call _for_each_entity
+    ret
+
+_for_each_block:
+    ld hl, _blocks_array
+    ld a, [_num_blocks]
+
+    ; Execute the function for every entity
     .loop_for_each:
-        push hl
-        push bc
         push af
-        push de
-        ret
-        pop de
-        pop af
-        pop bc
+        push hl
+
+        call _for_each_func_pointer
+
         pop hl
+        pop af
+
+        push bc
+
+        ld bc, BLOCK_SIZE
         add hl, bc
+
+        pop bc
+
         dec a
         jr nz, .loop_for_each
-    
+
+    ret
+
+_for_each_entity:
+    ld hl, _entities_array
+    ld a, [_num_entities]
+
+    ; Execute the function for every entity
+    .loop_for_each:
+        push af
+        push hl
+
+        call _for_each_func_pointer
+
+        pop hl
+        pop af
+
+        push bc
+
+        ld bc, ENTITY_SIZE
+        add hl, bc
+
+        pop bc
+
+        dec a
+        jr nz, .loop_for_each
+
     ret
 
 ;; ############################################################################

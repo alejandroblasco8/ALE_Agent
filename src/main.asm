@@ -39,11 +39,9 @@ main::
 	ld de, Map01
 	call draw_map
 
+	call render_entities
 	call end_drawing
 
-	ld de, player_entities
-	ld b, 1
-	call render_entities
 
    	di     ;; Disable Interrupts
    	halt   ;; Halt the CPU (stop procesing here)

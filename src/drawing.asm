@@ -7,6 +7,8 @@ _wait_vblank_start:
     ret
 
 _switch_off_screen:
+	call _wait_vblank_start
+
     ld a, [$FF40] ;; rLCDC
     res 7, a
     ld [$FF40], a ;; rLCDC
@@ -71,7 +73,6 @@ _draw_metatile:
     ret
 
 start_drawing:
-	call _wait_vblank_start
 	call _switch_off_screen
 	ret
 
