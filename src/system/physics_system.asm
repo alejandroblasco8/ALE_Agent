@@ -1,6 +1,6 @@
 include "constants.asm"
 
-SECTION "Physics render", ROM0
+SECTION "Physics system", ROM0
 
 
 ;; ############################################################################
@@ -82,6 +82,3 @@ physys_move_player::
 
     ret
     
-
-
-

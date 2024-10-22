@@ -19,13 +19,22 @@ include "constants.asm"
 SECTION "Entry point", ROM0[$250]
 
 
+player1: db 20, 20, $19, 0
+
+
 main::
+
+   ld a, [$FF40]    ; Cargar el valor actual del registro LCDC
+   or %00000010     ; Habilitar sprites (bit 1 de LCDC)
+   ld [$FF40], a    ; Guardar el nuevo valor en LCDC
+
 	; Load default palette
 	ld a, %11100100
 	ld [$FF47], a
 
-	ld a, %11100100
-	ld [$FF48], a
+   ldh a, [$40]
+   set 7, a
+   ldh [$40], a
 
 	call start_drawing
 
@@ -73,6 +82,29 @@ main::
 			jr nz, .row_loop
 
 	call end_drawing
+
+   
+   call start_drawing
+   call init_entity_manager
+   ld hl, player1
+   call entityman_create
+   ld hl, OAM_START_ADDR
+   ld bc, 160
+   call _clear_memory
+   ld hl, player1
+   ld bc, $FE00
+   call _copy_entity_to_OAM
+   call end_drawing
+
+   .loop
+      call _wait_vblank_start
+      call physys_move_player
+      ld a, 0
+      call entityman_get_by_index
+      ld bc, $FE00
+      call _copy_entity_to_OAM
+      
+   jp .loop
 
    	di     ;; Disable Interrupts
    	halt   ;; Halt the CPU (stop procesing here)

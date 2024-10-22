@@ -6,13 +6,13 @@ include "constants.asm"
 
 SECTION "Entity manager data", WRAM0
 
-_entities_array: ds MAX_ENTITIES * ENTITY_SIZE
 _num_entities: ds 1
+_last_elem_ptr: ds 2
+_entities_array: ds MAX_ENTITIES * ENTITY_SIZE
 
 _blocks_array: ds MAX_BLOCKS * BLOCK_SIZE
 _num_blocks: ds 1
 
-_last_elem_ptr: ds 2
 _for_each_func_pointer: DS 4
 
 
