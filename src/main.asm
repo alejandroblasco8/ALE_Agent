@@ -1,3 +1,4 @@
+include "constants.asm"
 ;;----------LICENSE NOTICE-------------------------------------------------------------------------------------------------------;;
 ;;  This file is part of GBTelera: A Gameboy Development Framework                                                               ;;
 ;;  Copyright (C) 2024 ronaldo / Cheesetea / ByteRealms (@FranGallegoBR)                                                         ;;
@@ -18,30 +19,60 @@
 SECTION "Entry point", ROM0[$250]
 
 
-player_entities:
-bomberman: DB 1,1,1,1
-
 main::
 	; Load default palette
 	ld a, %11100100
 	ld [$FF47], a
 
+	ld a, %11100100
+	ld [$FF48], a
+
 	call start_drawing
 
-	call init_tiles
+	.init_tiles:
+		ld de, MazeTiles
+		ld hl, $8000
+		ld bc, 3*16
+		call _copy_bc_bytes_de2hl
+	
+	.init_map:
+		; Set HL to the start of the second row, second column
+		ld hl, $9800
 
-	ld a, $7F
-	call draw_map_borders
+		; Set the tile number we want to use
+		ld de, MazeMap01
 
-	;call draw_map
-	call init_map
+		; Set counter for number of rows
+		ld b, 18
 
-	ld de, Map01
-	call draw_map
+		.row_loop:
+			; Set counter for number of columns
+			ld c, 20
 
-	call render_entities
+		.col_loop:
+			; Write the tile number to VRAM
+			ld a, [de]
+			inc de
+
+			ld [hl+], a
+
+			; Decrement column counter
+			dec c
+			jr nz, .col_loop
+
+			; Restore HL and move to the next row
+			push de
+
+			ld de, 12
+			add hl, de
+
+			pop de
+
+			; Decrement row counter
+			dec b
+			jr nz, .row_loop
+
 	call end_drawing
-
 
    	di     ;; Disable Interrupts
    	halt   ;; Halt the CPU (stop procesing here)

@@ -52,46 +52,6 @@ _copy_entity_to_OAM:
 ;; MODIFIES: AF, BC, HL
 ;; #############################################################################
 render_entities:
-    ld hl, _entities_array
-
-    ld a, 144
-    sub OAM_Y_DISPLACEMENT
-    ld [hl+], a
-
-    ld a, 8
-    sub OAM_X_DISPLACEMENT
-    ld [hl+], a
-
-    ld a, 19
-    ld [hl+], a
-
-    ld a, 0
-    ld [hl+], a
-
-    ld a, 2
-    ld [hl+], a
-
-     ld a, 145
-     sub OAM_Y_DISPLACEMENT
-     ld [hl+], a
-
-     ld a, 9
-     sub OAM_X_DISPLACEMENT
-     ld [hl+], a
-
-     ld a, 20
-     ld [hl+], a
-
-     ld a, 1
-     ld [hl+], a
-
-     ld a, 3
-     ld [hl+], a
-
-    ld a, 2
-    ld hl, _num_entities
-    ld [hl], a
-
     ld a, 0
     ld bc, OAM_START_ADDR
     ld de, _copy_entity_to_OAM

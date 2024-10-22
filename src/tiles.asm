@@ -58,3 +58,13 @@ DB $FF,$40,$FF,$40,$FF,$FF,$FF,$04
 DB $FF,$04,$FF,$FF,$FF,$20,$FF,$20
 DB $FF,$FF,$FF,$08,$FF,$08,$FF,$FF
 DB $FF,$20,$FF,$20,$FF,$FF,$FF,$FF
+
+; New game 8x8 tiles
+MazeTiles:
+DB $00,$18,$00,$3C,$00,$66,$00,$C3
+DB $00,$C3,$00,$66,$00,$3C,$00,$18
+DB $FF,$FF,$91,$91,$99,$99,$C3,$C3
+DB $D1,$D1,$9D,$9D,$85,$85,$FF,$FF
+DB $FF,$00,$FF,$00,$FF,$00,$FF,$00
+DB $FF,$00,$FF,$00,$FF,$00,$FF,$00
+

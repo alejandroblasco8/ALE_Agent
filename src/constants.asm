@@ -25,3 +25,6 @@ def HEIGHT = 5
 def TYPE = 6
 def LIFE = 7
 def DMG = 8
+
+DEF rLCDC = $FF40
+DEF rOBP0 = $FF48
