@@ -74,6 +74,39 @@ physys_move_player::
 
     call physys_update_pos
 
+    ld hl, $9800
+
+    ;;C = X, HL + X = 9800 + X
+    xor a
+    ld d, a
+    ld e, c
+    add hl, de
+
+    ;;B = Y, HL + 33*Y = 9800 + X + Y*33
+    ld a, b
+    sla a
+    ld e, a
+    sla a
+    sla a
+    sla a
+    sla a
+    add b
+    
+    ld e, a
+    add hl, de
+    ld a, [hl]
+    ld d, h
+    ld e, l
+
+    pop hl
+    push hl    
+    inc hl
+    inc hl
+    cp 1
+    jr nz, .update
+    jr .loop
+
+    .update:
     pop hl
     ld a, b
     ld [hl+], a
@@ -81,4 +114,7 @@ physys_move_player::
     ld [hl], a
 
     ret
+
+    .loop:
+        jr .loop
     
