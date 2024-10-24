@@ -73,41 +73,15 @@ physys_move_player::
     ldh a, [$00]
 
     call physys_update_pos
-
-    ld hl, $9800
-
-    ;;C = X, HL + X = 9800 + X
-    xor a
-    ld d, a
-    ld e, c
-    add hl, de
-
-    ;;B = Y, HL + 33*Y = 9800 + X + Y*33
-    ld a, b
-    sla a
-    ld e, a
-    sla a
-    sla a
-    sla a
-    sla a
-    add b
-    
-    ld e, a
-    add hl, de
-    ld a, [hl]
-    ld d, h
-    ld e, l
-
+    call physys_check_collision_down
     pop hl
-    push hl    
-    inc hl
-    inc hl
-    cp 1
-    jr nz, .update
-    jr .loop
+    ret z
+    push hl
+    call physys_check_collision_up
+    pop hl
+    ret z
 
     .update:
-    pop hl
     ld a, b
     ld [hl+], a
     ld a, c
@@ -115,6 +89,115 @@ physys_move_player::
 
     ret
 
-    .loop:
-        jr .loop
+
+physys_check_collision_down:
+
+    ld a, b
+    sub 16
+    add HEIGHT
+    and a, %11111000
+    ld l, a
+    ld h, 0
     
+    add hl, hl ; position * 16
+    add hl, hl ; position * 32
+
+    push hl
+
+
+    ;;X
+
+    ld a, c
+    sub 8
+    srl a ; a / 2
+    srl a ; a / 4
+    srl a ; a / 8
+
+
+    ld d, 0
+    ld e, a
+    add hl, de
+
+
+    ld de, $9800
+    add hl, de
+
+    ld a, [hl]
+    cp 1
+    pop hl
+    ret z
+
+    .right:
+
+    ld a, c
+    sub 8
+    add WIDTH
+    srl a ; a / 2
+    srl a ; a / 4
+    srl a ; a / 8
+
+
+    ld d, 0
+    ld e, a
+    add hl, de
+
+
+    ld de, $9800
+    add hl, de
+
+    ld a, [hl]
+    cp 1
+    ret
+
+
+physys_check_collision_up:
+
+    ld a, b
+    sub 16
+    and a, %11111000
+    ld l, a
+    ld h, 0
+    
+    add hl, hl ; position * 16
+    add hl, hl ; position * 32
+    push hl
+
+    .up_right:
+    ld a, c
+    sub 8
+    add HEIGHT
+    srl a ; a / 2
+    srl a ; a / 4
+    srl a ; a / 8
+
+    ld e, a
+    ld d, 0
+    add hl, de
+
+    ld de, $9800
+    add hl, de
+
+    ld a, [hl]
+    cp 1
+    pop hl
+    ret z
+
+    .up_left:
+
+    ld a, c
+    sub 8
+    srl a ; a / 2
+    srl a ; a / 4
+    srl a ; a / 8
+
+    ld e, a
+    ld d, 0
+    add hl, de
+
+    ld de, $9800
+    add hl, de
+
+    ld a, [hl]
+    cp 1
+    ret
+
