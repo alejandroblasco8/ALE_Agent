@@ -19,7 +19,7 @@ include "constants.asm"
 SECTION "Entry point", ROM0[$250]
 
 
-player1: db 20, 20, $19, 0
+player1: db 28, 20, $00, 0
 
 
 main::
@@ -41,7 +41,7 @@ main::
 	.init_tiles:
 		ld de, MazeTiles
 		ld hl, $8000
-		ld bc, 3*16
+		ld bc, 11*16
 		call _copy_bc_bytes_de2hl
 	
 	.init_map:
@@ -108,4 +108,3 @@ main::
 
    	di     ;; Disable Interrupts
    	halt   ;; Halt the CPU (stop procesing here)
-

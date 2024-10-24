@@ -105,8 +105,6 @@ physys_check_collision_down:
     push hl
 
 
-    ;;X
-
     ld a, c
     sub 8
     srl a ; a / 2
@@ -123,7 +121,7 @@ physys_check_collision_down:
     add hl, de
 
     ld a, [hl]
-    cp 1
+    call check_collision_solid_blocks
     pop hl
     ret z
 
@@ -146,14 +144,14 @@ physys_check_collision_down:
     add hl, de
 
     ld a, [hl]
-    cp 1
+    call check_collision_solid_blocks
     ret
 
 
 physys_check_collision_up:
 
     ld a, b
-    sub 16
+    sub 15
     and a, %11111000
     ld l, a
     ld h, 0
@@ -165,7 +163,7 @@ physys_check_collision_up:
     .up_right:
     ld a, c
     sub 8
-    add HEIGHT
+    add WIDTH
     srl a ; a / 2
     srl a ; a / 4
     srl a ; a / 8
@@ -178,7 +176,7 @@ physys_check_collision_up:
     add hl, de
 
     ld a, [hl]
-    cp 1
+    call check_collision_solid_blocks
     pop hl
     ret z
 
@@ -198,6 +196,23 @@ physys_check_collision_up:
     add hl, de
 
     ld a, [hl]
-    cp 1
+    call check_collision_solid_blocks
     ret
 
+
+check_collision_solid_blocks:
+    ld hl, CollisionTilesNumbers
+    ld d, NUM_COLLISION_TILES
+    ld e, a
+
+    .loop:
+
+        ld a, [hl+]
+        cp e
+        ret z
+        dec d
+        jr nz, .loop
+    
+    add a, 1
+    cp 0
+    ret
