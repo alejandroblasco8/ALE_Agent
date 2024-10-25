@@ -35,7 +35,7 @@ init_entity_manager::
     ld [_last_elem_ptr], a
     ld a, l
     ld [_last_elem_ptr + 1], a
-    
+
     ret
 
 ;; ############################################################################
@@ -92,7 +92,7 @@ entityman_create::
         dec c
 
         jr nz, .create_entity_loop
-    
+
     ;;Inc the number of entities
     ld a, [_num_entities]
     inc a
@@ -160,7 +160,7 @@ entityman_free_entity::
         inc de
         dec c
         jr nz, .loop_free_entity
-    
+
 
     .is_last:
     ;;Realocate the pointer to the entities_array last element
@@ -175,7 +175,7 @@ entityman_free_entity::
         dec hl
         dec c
         jr nz, .loop_last_elem
-    
+
     ld a, h
     ld [_last_elem_ptr], a
     ld a, l
@@ -204,7 +204,7 @@ entityman_free_entity::
 entityman_get_by_index::
     ld hl, _entities_array
     ld bc, ENTITY_SIZE
-    
+
     .loop_get_by_index:
         cp 0
         ret z
@@ -246,11 +246,11 @@ entityman_is_of_type_b::
 ;; ############################################################################
 
 entityman_find_first_by_type::
-    
+
     ld a, [_num_entities]
     ld c, a
     ld hl, _entities_array
-    
+
     .loop_find_first_by_type:
         ;;Checks if there is not more available entities.
         dec c
@@ -263,7 +263,7 @@ entityman_find_first_by_type::
         ret z
         add hl, de
         jp .loop_find_first_by_type
-    
+
     ret
 
 ;; ############################################################################
@@ -281,8 +281,6 @@ entityman_find_first_by_type::
 ;; #############################################################################
 
 entityman_for_each::
-    push af
-
     ; Construct callable pointer to the function
     ld hl, _for_each_func_pointer
 
@@ -302,46 +300,6 @@ entityman_for_each::
     ld a, $C9
     ld [hl], a
 
-    pop af
-
-    or a
-    jr z, .entities
-
-    .blocks:
-    call _for_each_block
-    ret
-
-    .entities:
-    call _for_each_entity
-    ret
-
-_for_each_block:
-    ld hl, _blocks_array
-    ld a, [_num_blocks]
-
-    ; Execute the function for every entity
-    .loop_for_each:
-        push af
-        push hl
-
-        call _for_each_func_pointer
-
-        pop hl
-        pop af
-
-        push bc
-
-        ld bc, BLOCK_SIZE
-        add hl, bc
-
-        pop bc
-
-        dec a
-        jr nz, .loop_for_each
-
-    ret
-
-_for_each_entity:
     ld hl, _entities_array
     ld a, [_num_entities]
 
@@ -393,6 +351,5 @@ entityman_update::
         inc de
         dec c
         jr nz, .loop_update
-    
-    ret
 
+    ret

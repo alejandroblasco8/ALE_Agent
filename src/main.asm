@@ -19,7 +19,7 @@ include "constants.asm"
 SECTION "Entry point", ROM0[$250]
 
 
-player1: db 28, 20, $00, 0
+player1: db 28, 20, $01, 0, 0
 
 
 main::
@@ -41,7 +41,7 @@ main::
 	.init_tiles:
 		ld de, MazeTiles
 		ld hl, $8000
-		ld bc, 11*16
+		ld bc, 12*16
 		call _copy_bc_bytes_de2hl
 	
 	.init_map:
@@ -83,28 +83,33 @@ main::
 
 	call end_drawing
 
-   
-   call start_drawing
-   call init_entity_manager
-   ld hl, player1
-   call entityman_create
-   ld hl, OAM_START_ADDR
-   ld bc, 160
-   call _clear_memory
-   ld hl, player1
-   ld bc, $FE00
-   call _copy_entity_to_OAM
-   call end_drawing
+    call start_drawing
 
-   .loop
-      call _wait_vblank_start
-      call physys_move_player
-      ld a, 0
-      call entityman_get_by_index
-      ld bc, $FE00
-      call _copy_entity_to_OAM
-      
-   jp .loop
+    ; Clear OAM memory
+     ld hl, OAM_START_ADDR
+     ld bc, 160
+     call _clear_memory
+
+   ; Initialize the entity manager
+    call init_entity_manager
+
+    ; Create the player entity
+    ld hl, player1
+    call entityman_create
+
+    ; Create the enemies entities
+    call aisys_init_enemies
+
+    call end_drawing
+
+    .loop
+        call _wait_vblank_start
+        call physys_move_player
+
+        ld bc, OAM_START_ADDR
+        ld de, _copy_entity_to_OAM
+        call entityman_for_each
+    jp .loop
 
    	di     ;; Disable Interrupts
    	halt   ;; Halt the CPU (stop procesing here)
