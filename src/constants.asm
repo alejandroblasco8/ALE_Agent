@@ -23,7 +23,8 @@ DEF PROJECTILE_SPEED = 1
 
 ; TILES CONSTANTS
 DEF LAST_TILE_ADDR = $7F
-DEF NUM_COLLISION_TILES = 4
+DEF NUM_COLLISION_TILES = 6 ;;
+DEF NUM_ENEMY_TILES = 2     ;; Deberían depender del nivel, para que 
 
 ; ENTITIES CONSTANTS
 DEF NOT_OAM_EXTRA_ATTRIBUTES = 3
@@ -38,15 +39,14 @@ def BLOCK_SIZE = 4
 def MAX_ENEMIES = 2
 def ENEMY_SIZE = 5
 
-def POS_X = 0
-def POS_Y = 1
+def POS_Y = 0
+def POS_X = 1
 def N_TILES = 2
 def ATTRIBUTES  = 3
-def WIDTH = 7
-def HEIGHT = 8
+def WIDTH = 7   ;;
+def HEIGHT = 8  ;;Representan el byte 4 y 5 de la entidad jugador, pero el valor es 7 y 8.
+
 def TYPE = 6
-def LIFE = 7
-def DMG = 8
 
 DEF rLCDC = $FF40
 DEF rOBP0 = $FF48
