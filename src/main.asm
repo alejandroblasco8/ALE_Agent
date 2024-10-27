@@ -19,7 +19,7 @@ include "constants.asm"
 SECTION "Entry point", ROM0[$250]
 
 
-player1: db 28, 20, $01, 0, 0
+player1: db 28, 20, $01, 0, 0, 0
 
 
 main::
@@ -31,6 +31,9 @@ main::
 	; Load default palette
 	ld a, %11100100
 	ld [$FF47], a
+	ld [$FF48], a
+	ld [$FF49], a
+
 
 	ldh a, [$40]
 	set 7, a
@@ -151,11 +154,36 @@ main::
     call end_drawing
 
     .loop
-        call _wait_vblank_start
         call physys_move_player
+        call aisys_enemies_shoot
 
+        ld hl, _entities_array
         ld bc, OAM_START_ADDR
         ld de, _copy_entity_to_OAM
+
+        ; testing the stop projectile
+        push hl
+        push af
+        push bc
+        push de
+
+        inc hl
+        inc hl
+        inc hl
+
+        ; projectile type (vertical down)
+        ld a, 02
+
+        ; lets try with first one
+        ld hl, _entities_array + ENTITY_SIZE
+        call reset_projectile
+
+        pop de
+        pop bc
+        pop af
+        pop hl
+
+        call _wait_vblank_start
         call entityman_for_each
 
 

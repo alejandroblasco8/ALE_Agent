@@ -2,20 +2,13 @@ include "constants.asm"
 
 SECTION "AI SYSTEM", ROM0
 
-_h_r_shoters: db $07
-_h_l_shoters: db $06
+_projectile: db $00, $00, $00, 0, 0, 0
 
-_bullet_shoters: db $06, $07
-_shuriken_shothers: db $09, $0A
-
-_bullet: db $10, $09, $08, 0, 0
-_shuriken: db $10, $0A, $0B, 0, 0
-
-aisys_init_enemies:
-    ld b, (MAX_ENTITIES - 1) / 2
+aisys_init_enemies2:
+    ld b, (MAX_ENTITIES - 1)
 
     .loop1:
-        ld hl, _bullet
+        ld hl, _projectile
 
         push bc
         call entityman_create
@@ -24,34 +17,12 @@ aisys_init_enemies:
         dec b
         jr nz, .loop1
 
-    ld b, (MAX_ENTITIES - 1) / 2
-
-    .loop2:
-        ld hl, _shuriken
-
-        push bc
-        call entityman_create
-        pop bc
-
-        dec b
-        jr nz, .loop2
-
-    ret
-
-; WORK IN PROGRESS
-; SHOULD READ THE MAP TO GET THE TILE NUMBER
-; USING CONSTANTS SHOULD KNOW WHICH GUN SHOOTS
-; IN WHICH DIRECTION
-; LAST BYTE OF ENTITY SHOULD INDICATE THE DIRECTION WITH:
-; HOR - RIGHT => %00000000
-; HOR - LEFT  => %00000001
-; VER - UP    => %00000010
-; VER - DOWN   => %00000011
-; COMPARISON ARE NOT CORRECT RIGHT NOW AND IS
-; ONLY CHECKING HORIZONTAL TO BEGIN WITH
-aisys_select_dir:
-    ; Set HL to the start of the second row, second column
+aisys_init_enemies:
     ld hl, VRAM_START_ADDR
+
+    ; Gun enemy found counter
+    ld d, 0
+    push de
 
     ; Set counter for number of rows
     ld b, 18
@@ -63,75 +34,214 @@ aisys_select_dir:
     .col_loop:
         ; Read the tile number
         ld a, [hl+]
-
-        ; Check if left horizontal shoter
         ld d, a
-        ld a, [_h_l_shoters]
-        xor d
+
+        ; Check if left horizontal shooter
+        ld a, H_L_SHOOTER
+        cp d
 
         ; Save result and jump to found
-        ld e, 0
+        ld e, H_L_CODE
         jr z, .enemy_found
 
-        ; Check if right horizontal shoter
-        ld a, [_h_r_shoters]
-        xor d
+        ; Check if right horizontal shooter
+        ld a, H_R_SHOOTER
+        cp d
 
-        ; Save result and jump (conditionally) to not found
-        ld e, 1
-        jr nz, .enemy_not_found
+        ; Save result and jump to found
+        ld a, H_R_CODE
+        jr z, .enemy_found
+
+        ; Check if vertical down shooter
+        ld a, V_D_SHOOTER
+        cp d
+
+        ; Save result and jump to found
+        ld a, V_D_CODE
+        jr z, .enemy_found
+
+        ; Check if vertical up shooter
+        ld a, V_U_SHOOTER
+        cp d
+
+        ; Save result and jump to found
+        ld a, V_U_CODE
+        jp nz, .enemy_not_found
 
         .enemy_found
-        ; Load bullet
-        ld hl, _entities_array + ENTITY_SIZE
+
+
+        pop de
+        inc d
+        push de
+
+        ; Save BC for counter
+        push bc
+
+        ; Save VRAM pointer
+        push hl
+
+        ; Save entity type
+        push af
+
+        push de
+
+        ld de, $9800
+
+        ld a, l
+        sub e
+        ld l, a
+
+        ld a, h
+        sbc d
+        ld h, a
+
+        ld de, 32
+        ld b, 0
+
+        .loop_32
+            ld a, l
+            sub e
+            ld l, a
+
+            ld a, h
+            sbc d
+            ld h, a
+
+            inc b
+
+            cp 0
+            jr nz, .loop_32
+
+            ld a, l
+            cp 32
+            jr nc, .loop_32
+
+        ld a, b
+
+        sla a
+        sla a
+        sla a
+
+        ld b, OAM_Y_DISPLACEMENT
+        add b
+
+        pop de
+
+        ; Save HL to calculate X
+        push hl
+
+        ; Create entity
+        ld hl, _projectile
+
+        push de
+        push af
+        call entityman_create
+        pop af
+        pop de
+
+        ; Find WRAM position for next bullet
+        ld hl, _entities_array
+        ld bc, ENTITY_SIZE
+
+        .entity_array_pos_loop:
+            add hl, bc
+
+            dec d
+            jr nz, .entity_array_pos_loop
+
+
+        ld [hl+], a
+
+        ; Save VRAM pointer
+        ld b, h
+        ld c, l
+
+        ; Retrieve decremented HL
+        pop hl
 
         ; Set X Coord
-        ld a, c
-        ld d, OAM_X_DISPLACEMENT
+        ld a, l
+
+        sla a
+        sla a
+        sla a
+
+        ld d, OAM_X_DISPLACEMENT - 8
         add d
-        ld [hl], d
-        inc hl
 
-        ; Set Y Coord
-        ld a, b
-        ld d, OAM_Y_DISPLACEMENT
-        add d
-        ld [hl], d
-        inc hl
+        ; Retrieve VRAM pointer
+        ld h, b
+        ld l, c
 
-        ; Jump to specific type of enemy
-        ld a, e
-        or a
+        ld [hl+], a
 
+        ; Retrieve entity type
+        pop af
+        ld e, a
+
+        ; Jump to horizonal left
+        cp H_L_CODE
+        jr z, .h_l
+
+        ; Jump to horizontal right
+        cp H_R_CODE
         jr z, .h_r
+
+        ; Jump to vertical down
+        cp V_D_CODE
+        jr z, .v_d
+
+        ; Jump to vertical up
+        cp V_U_CODE
+        jr z, .v_u
 
         .h_l
 
         ld a, H_L_TILE
-        ld [hl+], a
         jr .create_entity
 
         .h_r
 
         ld a, H_R_TILE
-        ld [hl+], a
+        jr .create_entity
+
+        .v_d
+
+        ld a, V_D_TILE
+        jr .create_entity
+
+        .v_u
+
+        ld a, V_U_TILE
 
         .create_entity
 
+        ; Load tile
+        ld [hl+], a
+
         ; Set attributes
+        ld a, 0
+        ld [hl+], a
+
+        ; Set dir
+        ld a, e
+        ld [hl+], a
+
+        ; Set steps done
         ld a, 0
         ld [hl], a
 
-        ; Create in OAM
-        push bc
-        ld hl, _bullet
-        call entityman_create
+        ; Retrieve VRAM pointer
+        pop hl
+
+        ; Retrieve counter
         pop bc
 
         .enemy_not_found:
         ; Decrement column counter
         dec c
-        jr nz, .col_loop
+        jp nz, .col_loop
 
         ; Move to the next row
         ld de, 12
@@ -139,6 +249,173 @@ aisys_select_dir:
 
         ; Decrement row counter
         dec b
-        jr nz, .row_loop
+        jp nz, .row_loop
 
-ret
+    pop de
+    ret
+
+aisys_enemies_shoot::
+    ld hl, _entities_array + ENTITY_SIZE - 2
+    ld de, ENTITY_SIZE
+
+    ld a, [_num_entities]
+    cp 0
+    ret z
+
+    ld c, a
+
+    .loop:
+        add hl, de
+        ld a, [hl]
+
+        cp H_L_CODE
+        jr z, .h_l
+
+        cp H_R_CODE
+        jr z, .h_r
+
+        cp V_D_CODE
+        jr z, .v_d
+
+        cp V_U_CODE
+        jr z, .v_u
+
+        .h_l:
+
+        inc hl
+        inc [hl]
+
+        ld a, l
+        sub 4
+        ld l, a
+
+        ld a, [hl]
+        sub PROJECTILE_SPEED
+        ld [hl], a
+
+        ld a, 3
+        add l
+        ld l, a
+        ld a, 0
+        adc h
+        ld h, a
+
+        jr .next_projectile
+
+        .h_r:
+
+        inc hl
+        inc [hl]
+
+        ld a, l
+        sub 4
+        ld l, a
+
+        ld a, [hl]
+        add PROJECTILE_SPEED
+        ld [hl], a
+
+        ld a, 3
+        add l
+        ld l, a
+        ld a, 0
+        adc h
+        ld h, a
+
+        jr .next_projectile
+
+        .v_d:
+
+        inc hl
+        inc [hl]
+
+        ld a, l
+        sub 5
+        ld l, a
+
+        ld a, [hl]
+        add PROJECTILE_SPEED
+        ld [hl], a
+
+        ld a, 4
+        add l
+        ld l, a
+        ld a, 0
+        adc h
+        ld h, a
+
+        jr .next_projectile
+
+        .v_u:
+
+        inc hl
+        inc [hl]
+
+        ld a, l
+        sub 5
+        ld l, a
+
+        ld a, [hl]
+        sub PROJECTILE_SPEED
+        ld [hl], a
+
+        ld a, 4
+        add l
+        ld l, a
+        ld a, 0
+        adc h
+        ld h, a
+
+        .next_projectile:
+
+        dec c
+        jr nz, .loop
+
+    ret
+
+; a => projectile code
+; hl => x or y position depending on a
+; if a is horizontal x should be passed
+; if a is vertical y should be passed
+reset_projectile::
+    cp H_L_CODE
+    jr z, .h
+
+    cp H_R_CODE
+    jr z, .h
+
+    cp V_D_CODE
+    jr z, .v
+
+    cp V_U_CODE
+    jr z, .v
+
+    .h
+
+    ld bc, 4
+    jr .reset
+
+    .v
+
+    ld bc, 5
+
+    .reset
+
+    add hl, bc
+    ld e, [hl]
+
+    ; Back to position
+    ld a, l
+    sub c
+    ld l, a
+    ld a, h
+    ld c, 0
+    sbc c
+    ld h, a
+
+    ; Substract steps done
+    ld a, [hl]
+    sub e
+    ld [hl], a
+
+    ret
