@@ -79,7 +79,7 @@ physys_move_player::
     push hl
     call physys_check_collision_up
     pop hl
-    ret z
+    ret z    
 
     .update:
     ld a, b
@@ -91,7 +91,7 @@ physys_move_player::
     ret
 
 
-physys_check_collision_down:
+physys_check_collision_down::
 
     ld a, b
     sub 16
@@ -105,7 +105,7 @@ physys_check_collision_down:
 
     push hl
 
-
+    ;;DOWN-LEFT
     ld a, c
     sub 8
     srl a ; a / 2
@@ -122,12 +122,13 @@ physys_check_collision_down:
     add hl, de
 
     ld a, [hl]
-    call check_collision_solid_blocks
+    call check_collisions
     pop hl
     ret z
 
-    .right:
 
+    ;;DOWN-RIGHT
+    push hl
     ld a, c
     sub 8
     add WIDTH
@@ -145,11 +146,12 @@ physys_check_collision_down:
     add hl, de
 
     ld a, [hl]
-    call check_collision_solid_blocks
+    call check_collisions
+    pop hl
     ret
 
 
-physys_check_collision_up:
+physys_check_collision_up::
 
     ld a, b
     sub 15
@@ -161,7 +163,7 @@ physys_check_collision_up:
     add hl, hl ; position * 32
     push hl
 
-    .up_right:
+    ;;UP-RIGHT
     ld a, c
     sub 8
     add WIDTH
@@ -177,12 +179,12 @@ physys_check_collision_up:
     add hl, de
 
     ld a, [hl]
-    call check_collision_solid_blocks
+    call check_collisions
     pop hl
     ret z
 
-    .up_left:
-
+    ;;UP-LEFT
+    push hl
     ld a, c
     sub 8
     srl a ; a / 2
@@ -197,23 +199,76 @@ physys_check_collision_up:
     add hl, de
 
     ld a, [hl]
-    call check_collision_solid_blocks
+    call check_collisions
+    pop hl
     ret
 
 
-check_collision_solid_blocks:
+check_collisions::
     ld hl, CollisionTilesNumbers
     ld d, NUM_COLLISION_TILES
     ld e, a
 
-    .loop:
+    .collision_solid_loop:
 
         ld a, [hl+]
         cp e
         ret z
         dec d
-        jr nz, .loop
+        jr nz, .collision_solid_loop
     
-    add a, 1
+    .continue:
+        or 1
+        ret
+    
+check_enemy_collisions::
+    call entityman_getEntityArray_HL
+    call entityman_getNumEntities_A
+
+    ld a, [hl+]
+    ld b, a
+    ld a, [hl-]
+    ld c, a
+    ld de, ENTITY_SIZE + 1
+    add hl, de
+
+    dec a
     cp 0
-    ret
+    jr z, .continue
+    ld d, a
+    ld e, ENTITY_SIZE + 1
+
+    .collision_enemy_loop:
+        ld a, [hl-]
+        cp c
+        jr nz, .collision_enemy_next
+
+        ld a, [hl]
+        cp b
+        jr z, .reset_pos
+
+        call .collision_enemy_next
+    
+    .collision_enemy_next:
+        dec d
+        jr z, .continue
+        ld a, d
+        ld d, 0
+        add hl, de
+        ld d, a
+        jr .collision_enemy_loop
+    
+
+    .reset_pos:
+        ld a, 0
+        call entityman_get_by_index
+        ld a, 28
+        ld [hl+], a
+        ld [hl], 20
+        
+        xor a
+        ret
+    
+    .continue:
+        or 1
+        ret
