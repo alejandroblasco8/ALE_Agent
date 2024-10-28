@@ -95,7 +95,6 @@ physys_move_player::
 
 
 physys_check_collision_down::
-physys_check_collision_down::
 
     ld a, b
     sub 16
@@ -130,12 +129,6 @@ physys_check_collision_down::
     pop hl
     ret z
 
-    ;;Check if exit tile
-    ld a, e
-    cp exit
-    
-    jr z, in_exit_gate
-
     ;;DOWN-RIGHT
     push hl
     ld a, c
@@ -157,12 +150,6 @@ physys_check_collision_down::
     ld a, [hl]
     call check_collisions
     pop hl
-    
-    ;;Check if exit tile
-    ld a, e
-    cp exit
-    
-    jr z, in_exit_gate
 
     ret
 
@@ -199,12 +186,6 @@ physys_check_collision_up::
     pop hl
     ret z
 
-    ;;Check if exit tile
-    ld a, e
-    cp exit
-    
-    jr z, in_exit_gate
-
     ;;UP-LEFT
     push hl
     ld a, c
@@ -224,22 +205,6 @@ physys_check_collision_up::
     call check_collisions
     pop hl
 
-    ;;Check if exit tile
-    ld a, e
-    cp exit
-    
-    jr z, in_exit_gate
-
-    ret
-
-in_exit_gate::
-    ld a, 0
-    call entityman_get_by_index
-    ld a, 28
-    ld [hl+], a
-    ld [hl], 20
-    
-    xor a
     ret
     
 check_collisions::
