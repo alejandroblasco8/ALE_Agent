@@ -20,7 +20,6 @@ SECTION "Entry point", ROM0[$250]
 
 
 player1: db 28, 20, $01, 0, 7, 8
-player1: db 28, 20, $01, 0, 7, 8
 
 
 main::

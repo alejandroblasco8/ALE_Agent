@@ -1,5 +1,9 @@
 include "constants.asm"
 
+SECTION "Physics system locations", WRAM0
+
+_UP_DOWN: ds 4
+
 SECTION "Physics system", ROM0
 
 
@@ -75,13 +79,7 @@ physys_move_player::
     call physys_update_pos
     call physys_check_collision_down
     pop hl
-    ret z
-
-    push hl
-    call physys_check_collision_up
-    pop hl
-    ret z    
-    ret z    
+    ret z   
 
     .update:
     ld a, b
@@ -96,6 +94,7 @@ physys_move_player::
 
 physys_check_collision_down::
 
+    ;;DOWN
     ld a, b
     sub 16
     add HEIGHT
@@ -106,56 +105,12 @@ physys_check_collision_down::
     add hl, hl ; position * 16
     add hl, hl ; position * 32
 
-    push hl
+    ld a, h
+    ld[_UP_DOWN], a
+    ld a, l
+    ld[_UP_DOWN+1], a
 
-    ;;DOWN-LEFT
-    ld a, c
-    sub 8
-    srl a ; a / 2
-    srl a ; a / 4
-    srl a ; a / 8
-
-
-    ld d, 0
-    ld e, a
-    add hl, de
-
-
-    ld de, $9800
-    add hl, de
-
-    ld a, [hl]
-    call check_collisions
-    pop hl
-    ret z
-
-    ;;DOWN-RIGHT
-    push hl
-    ld a, c
-    sub 8
-    add WIDTH
-    srl a ; a / 2
-    srl a ; a / 4
-    srl a ; a / 8
-
-
-    ld d, 0
-    ld e, a
-    add hl, de
-
-
-    ld de, $9800
-    add hl, de
-
-    ld a, [hl]
-    call check_collisions
-    pop hl
-
-    ret
-
-
-physys_check_collision_up::
-
+    ;;UP
     ld a, b
     sub 15
     and a, %11111000
@@ -164,9 +119,59 @@ physys_check_collision_up::
     
     add hl, hl ; position * 16
     add hl, hl ; position * 32
-    push hl
 
-    ;;UP-RIGHT
+    ld a, h
+    ld[_UP_DOWN+2], a
+    ld a, l
+    ld[_UP_DOWN+3], a
+
+    ;;UP-LEFT
+    ld a, c
+    sub 8
+    srl a ; a / 2
+    srl a ; a / 4
+    srl a ; a / 8
+
+
+    ld d, 0
+    ld e, a
+    add hl, de
+    push de
+
+
+    ld de, $9800
+    add hl, de
+
+    ld a, [hl]
+    call check_collisions
+    pop de
+    ret z
+
+    ;;DOWN-LEFT
+    ld a, [_UP_DOWN]
+    ld h, a
+    ld a, [_UP_DOWN+1]
+    ld l, a
+
+    add hl, de
+    ld de, $9800
+    add hl, de
+
+    ld a, [hl]
+    call check_collisions
+    ret z
+
+    ld a, e
+    cp $03
+    call check_goal_entry
+    ret z
+
+    ;;DOWN-RIGHT
+    ld a, [_UP_DOWN]
+    ld h, a
+    ld a, [_UP_DOWN+1]
+    ld l, a
+
     ld a, c
     sub 8
     add WIDTH
@@ -174,8 +179,10 @@ physys_check_collision_up::
     srl a ; a / 4
     srl a ; a / 8
 
-    ld e, a
+
     ld d, 0
+    ld e, a
+    push de
     add hl, de
 
     ld de, $9800
@@ -183,29 +190,22 @@ physys_check_collision_up::
 
     ld a, [hl]
     call check_collisions
-    pop hl
+    pop de
     ret z
 
-    ;;UP-LEFT
-    push hl
-    ld a, c
-    sub 8
-    srl a ; a / 2
-    srl a ; a / 4
-    srl a ; a / 8
+    ;;UP-RIGHT
+    ld a, [_UP_DOWN+2]
+    ld h, a
+    ld a, [_UP_DOWN+3]
+    ld l, a
 
-    ld e, a
-    ld d, 0
     add hl, de
-
     ld de, $9800
     add hl, de
 
     ld a, [hl]
     call check_collisions
-    pop hl
-
-    ret
+    ret 
     
 check_collisions::
     ld hl, CollisionTilesNumbers
@@ -243,7 +243,7 @@ check_enemy_collisions::
     .collision_enemy_loop:
         ld a, [hl]
         cp c
-        call .collision_axis_x
+        call .collision_axis_y
         jr c, .next_axis
         jr nz, .collision_enemy_next
 
@@ -251,7 +251,7 @@ check_enemy_collisions::
         dec hl
         ld a, [hl]
         cp b
-        call .collision_axis_y
+        call .collision_axis_x
         jr c, .reset_pos
         jr z, .reset_pos
     
@@ -300,3 +300,20 @@ check_enemy_collisions::
     .continue:
         or 1
         ret
+
+
+check_goal_entry::
+    ret nz
+
+    ld a,0
+    call entityman_get_by_index
+
+    ld a, 28
+    ld [hl+], a
+    ld [hl], 20
+    
+    xor a
+    ret
+
+    
+
