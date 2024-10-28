@@ -32,9 +32,57 @@ main::
 	ld a, %11100100
 	ld [$FF47], a
 
-   ldh a, [$40]
-   set 7, a
-   ldh [$40], a
+	ldh a, [$40]
+	set 7, a
+	ldh [$40], a
+
+	call start_drawing
+
+	; Mostrar pantalla de inicio
+
+	; Set HL to the start of the second row, second column
+	ld hl, $9800
+
+	; Set the tile number we want to use
+	ld de, PantallaInicio
+
+	; Set counter for number of rows
+	ld b, 18
+	.row_loop1:
+		; Set counter for number of columns
+		ld c, 20
+
+	.col_loop1:
+		; Write the tile number to VRAM
+		ld a, [de]
+		inc de
+
+		ld [hl+], a
+
+		; Decrement column counter
+		dec c
+		jr nz, .col_loop1
+
+		; Restore HL and move to the next row
+		push de
+
+		ld de, 12
+		add hl, de
+
+		pop de
+
+		; Decrement row counter
+		dec b
+		jr nz, .row_loop1
+
+
+	call end_drawing
+
+	call _wait_button
+
+	ldh a, [$40]
+	set 7, a
+	ldh [$40], a
 
 	call start_drawing
 
@@ -109,7 +157,11 @@ main::
         ld bc, OAM_START_ADDR
         ld de, _copy_entity_to_OAM
         call entityman_for_each
+
+
     jp .loop
+
+	call game_over
 
    	di     ;; Disable Interrupts
    	halt   ;; Halt the CPU (stop procesing here)
