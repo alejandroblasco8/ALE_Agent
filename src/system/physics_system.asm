@@ -76,6 +76,7 @@ physys_move_player::
     call physys_check_collision_down
     pop hl
     ret z
+
     push hl
     call physys_check_collision_up
     pop hl
@@ -126,6 +127,11 @@ physys_check_collision_down::
     pop hl
     ret z
 
+    ;;Check if exit tile
+    ld a, e
+    cp exit
+    
+    jr z, in_exit_gate
 
     ;;DOWN-RIGHT
     push hl
@@ -148,6 +154,13 @@ physys_check_collision_down::
     ld a, [hl]
     call check_collisions
     pop hl
+    
+    ;;Check if exit tile
+    ld a, e
+    cp exit
+    
+    jr z, in_exit_gate
+
     ret
 
 
@@ -183,6 +196,12 @@ physys_check_collision_up::
     pop hl
     ret z
 
+    ;;Check if exit tile
+    ld a, e
+    cp exit
+    
+    jr z, in_exit_gate
+
     ;;UP-LEFT
     push hl
     ld a, c
@@ -201,9 +220,25 @@ physys_check_collision_up::
     ld a, [hl]
     call check_collisions
     pop hl
+
+    ;;Check if exit tile
+    ld a, e
+    cp exit
+    
+    jr z, in_exit_gate
+
     ret
 
-
+in_exit_gate::
+    ld a, 0
+    call entityman_get_by_index
+    ld a, 28
+    ld [hl+], a
+    ld [hl], 20
+    
+    xor a
+    ret
+    
 check_collisions::
     ld hl, CollisionTilesNumbers
     ld d, NUM_COLLISION_TILES
@@ -223,33 +258,37 @@ check_collisions::
     
 check_enemy_collisions::
     call entityman_getEntityArray_HL
-    call entityman_getNumEntities_A
 
     ld a, [hl+]
-    ld b, a
+    ld b, a ;;B -> Y
     ld a, [hl-]
-    ld c, a
+    ld c, a ;;C -> X
     ld de, ENTITY_SIZE + 1
     add hl, de
 
+    call entityman_getNumEntities_A
     dec a
-    cp 0
     jr z, .continue
     ld d, a
     ld e, ENTITY_SIZE + 1
 
     .collision_enemy_loop:
-        ld a, [hl-]
+        ld a, [hl]
         cp c
+        call .collision_axis_x
+        jr c, .next_axis
         jr nz, .collision_enemy_next
 
+        .next_axis:
+        dec hl
         ld a, [hl]
         cp b
+        call .collision_axis_y
+        jr c, .reset_pos
         jr z, .reset_pos
-
-        call .collision_enemy_next
     
     .collision_enemy_next:
+        dec hl
         dec d
         jr z, .continue
         ld a, d
@@ -257,7 +296,28 @@ check_enemy_collisions::
         add hl, de
         ld d, a
         jr .collision_enemy_loop
+
+    .collision_axis_x:
+        jr nc, .x_not_greater
+        ld a, b
+        sub [hl]
+        inc hl
+        jr .diff_less_than
+        .x_not_greater:
+            sub b
+            jr .diff_less_than
+
+    .collision_axis_y:
+        jr nc, .y_not_greater
+        ld a, c
+        sub [hl]
+        jr .diff_less_than
+        .y_not_greater:
+            sub c
     
+    .diff_less_than:
+        cp 3 ;;No da Z = 1 si a no es exactamente 30 
+        ret
 
     .reset_pos:
         ld a, 0

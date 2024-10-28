@@ -106,18 +106,21 @@ main::
     call end_drawing
 
     .loop
+
+		ld hl, _entities_array
+        ld bc, OAM_START_ADDR
+        ld de, _copy_entity_to_OAM
+
+		call _wait_vblank_start
+
+		call entityman_for_each
         call physys_move_player
-        call _wait_vblank_start
+
+
         call aisys_enemies_shoot
         call check_enemy_collisions
         
-
-        ld hl, _entities_array
-        ld bc, OAM_START_ADDR
-        ld de, _copy_entity_to_OAM
       
-        call _wait_vblank_start
-        call entityman_for_each
     jp .loop
 
    	di     ;; Disable Interrupts
