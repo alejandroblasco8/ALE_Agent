@@ -20,33 +20,72 @@ SECTION "Entry point", ROM0[$250]
 
 
 player1: db 28, 20, $01, 0, 7, 8
+player1: db 28, 20, $01, 0, 7, 8
 
 
 main::
+	call start_drawing
 
-   ld a, [$FF40]    ; Cargar el valor actual del registro LCDC
-   or %00000010     ; Habilitar sprites (bit 1 de LCDC)
-   ld [$FF40], a    ; Guardar el nuevo valor en LCDC
-
-	; Load default palette
+ ; Load default palette
 	ld a, %11100100
 	ld [$FF47], a
 	ld [$FF48], a
 	ld [$FF49], a
 
-
-   ldh a, [$40]
-   set 7, a
-   ldh [$40], a
-
-	call start_drawing
+   ld a, [$FF40]    ; Cargar el valor actual del registro LCDC
+   or %00000010     ; Habilitar sprites (bit 1 de LCDC)
+   ld [$FF40], a    ; Guardar el nuevo valor en LCDC
 
 	.init_tiles:
 		ld de, MazeTiles
 		ld hl, $8000
 		ld bc, 12*16
 		call _copy_bc_bytes_de2hl
-	
+
+	; Mostrar pantalla de inicio
+
+	; Set HL to the start of the second row, second column
+	ld hl, $9800
+
+	; Set the tile number we want to use
+	ld de, PantallaInicio
+
+	; Set counter for number of rows
+	ld b, 18
+	.row_loop1:
+		; Set counter for number of columns
+		ld c, 20
+
+	.col_loop1:
+		; Write the tile number to VRAM
+		ld a, [de]
+		inc de
+
+		ld [hl+], a
+
+		; Decrement column counter
+		dec c
+		jr nz, .col_loop1
+
+		; Restore HL and move to the next row
+		push de
+
+		ld de, 12
+		add hl, de
+
+		pop de
+
+		; Decrement row counter
+		dec b
+		jr nz, .row_loop1
+
+
+	call end_drawing
+
+	call _wait_button
+
+	call start_drawing
+
 	.init_map:
 		; Set HL to the start of the second row, second column
 		ld hl, $9800
@@ -84,9 +123,6 @@ main::
 			dec b
 			jr nz, .row_loop
 
-	call end_drawing
-
-    call start_drawing
 
     ; Clear OAM memory
      ld hl, OAM_START_ADDR
@@ -106,22 +142,22 @@ main::
     call end_drawing
 
     .loop
-
-		ld hl, _entities_array
-        ld bc, OAM_START_ADDR
+        ; No need for wait for vblank
         ld de, _copy_entity_to_OAM
+        ld hl, _entities_array
+        ld bc, OAM_START_ADDR
 
-		call _wait_vblank_start
+        call _wait_vblank_start
 
-		call entityman_for_each
+        call entityman_for_each
         call physys_move_player
 
-
+        ; No need for wait for vblank
         call aisys_enemies_shoot
         call check_enemy_collisions
-        
-      
     jp .loop
+
+	call game_over
 
    	di     ;; Disable Interrupts
    	halt   ;; Halt the CPU (stop procesing here)

@@ -81,6 +81,7 @@ physys_move_player::
     call physys_check_collision_up
     pop hl
     ret z    
+    ret z    
 
     .update:
     ld a, b
@@ -89,9 +90,11 @@ physys_move_player::
     ld [hl], a
 
 
+
     ret
 
 
+physys_check_collision_down::
 physys_check_collision_down::
 
     ld a, b
