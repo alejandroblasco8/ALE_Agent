@@ -220,35 +220,53 @@ check_collisions::
     .continue:
         or 1
         ret
-    
+
 check_enemy_collisions::
     call entityman_getEntityArray_HL
     call entityman_getNumEntities_A
-
-    ld a, [hl+]
+    ld a, [hl+]    ; Y position
     ld b, a
-    ld a, [hl-]
+    ld a, [hl-]    ; X position
     ld c, a
     ld de, ENTITY_SIZE + 1
     add hl, de
-
     dec a
-    cp 0
     jr z, .continue
     ld d, a
     ld e, ENTITY_SIZE + 1
 
     .collision_enemy_loop:
+        ; Check X first
+        ; Get enemy X
         ld a, [hl-]
+
+        ; Calculate absolute difference for X
+        ; Compare with player X
         cp c
-        jr nz, .collision_enemy_next
+        jr nc, .x_greater
+        ld a, c
+        sub [hl]
+        jr .check_x_diff
+    .x_greater:
+        sub c
+    .check_x_diff:
+        cp 4           ; Check if difference is less than 4
+        jr nc, .collision_enemy_next
 
-        ld a, [hl]
-        cp b
-        jr z, .reset_pos
+        ; Now check Y
+        ld a, [hl]     ; Get enemy Y
+        cp b           ; Compare with player Y
+        jr nc, .y_greater
+        ld a, b
+        sub [hl]
+        jr .check_y_diff
+    .y_greater:
+        sub b
+    .check_y_diff:
+        cp 4           ; Check if difference is less than 4
+        jr nc, .collision_enemy_next
+        jr .reset_pos
 
-        call .collision_enemy_next
-    
     .collision_enemy_next:
         dec d
         jr z, .continue
@@ -257,7 +275,6 @@ check_enemy_collisions::
         add hl, de
         ld d, a
         jr .collision_enemy_loop
-    
 
     .reset_pos:
         ld a, 0
@@ -265,10 +282,9 @@ check_enemy_collisions::
         ld a, 28
         ld [hl+], a
         ld [hl], 20
-        
         xor a
         ret
-    
+
     .continue:
         or 1
         ret

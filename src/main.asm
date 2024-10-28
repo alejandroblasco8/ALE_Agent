@@ -23,23 +23,23 @@ player1: db 28, 20, $01, 0, 7, 8
 
 
 main::
+	call start_drawing
 
-   ld a, [$FF40]    ; Cargar el valor actual del registro LCDC
-   or %00000010     ; Habilitar sprites (bit 1 de LCDC)
-   ld [$FF40], a    ; Guardar el nuevo valor en LCDC
-
-	; Load default palette
+ ; Load default palette
 	ld a, %11100100
 	ld [$FF47], a
 	ld [$FF48], a
 	ld [$FF49], a
 
+   ld a, [$FF40]    ; Cargar el valor actual del registro LCDC
+   or %00000010     ; Habilitar sprites (bit 1 de LCDC)
+   ld [$FF40], a    ; Guardar el nuevo valor en LCDC
 
-	ldh a, [$40]
-	set 7, a
-	ldh [$40], a
-
-	call start_drawing
+	.init_tiles:
+		ld de, MazeTiles
+		ld hl, $8000
+		ld bc, 12*16
+		call _copy_bc_bytes_de2hl
 
 	; Mostrar pantalla de inicio
 
@@ -83,18 +83,8 @@ main::
 
 	call _wait_button
 
-	ldh a, [$40]
-	set 7, a
-	ldh [$40], a
-
 	call start_drawing
 
-	.init_tiles:
-		ld de, MazeTiles
-		ld hl, $8000
-		ld bc, 12*16
-		call _copy_bc_bytes_de2hl
-	
 	.init_map:
 		; Set HL to the start of the second row, second column
 		ld hl, $9800
@@ -132,9 +122,6 @@ main::
 			dec b
 			jr nz, .row_loop
 
-	call end_drawing
-
-    call start_drawing
 
     ; Clear OAM memory
      ld hl, OAM_START_ADDR
@@ -154,20 +141,19 @@ main::
     call end_drawing
 
     .loop
-        call physys_move_player
-        call _wait_vblank_start
-        call aisys_enemies_shoot
-        call check_enemy_collisions
-        
-
+        ; No need for wait for vblank
+        ld de, _copy_entity_to_OAM
         ld hl, _entities_array
         ld bc, OAM_START_ADDR
-        ld de, _copy_entity_to_OAM
-      
+
         call _wait_vblank_start
+
         call entityman_for_each
+        call physys_move_player
 
-
+        ; No need for wait for vblank
+        call aisys_enemies_shoot
+        call check_enemy_collisions
     jp .loop
 
 	call game_over
