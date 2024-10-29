@@ -19,7 +19,7 @@ include "constants.asm"
 SECTION "Entry point", ROM0[$250]
 
 
-player1: db 28, 20, $01, 0, 7, 8
+player1: db 28, 20, $04, 0, 7, 8
 
 
 main::
@@ -38,7 +38,7 @@ main::
 	.init_tiles:
 		ld de, MazeTiles
 		ld hl, $8000
-		ld bc, 12*16
+		ld bc, 15*16
 		call _copy_bc_bytes_de2hl
 
 	; Mostrar pantalla de inicio
@@ -90,7 +90,7 @@ main::
 		ld hl, $9800
 
 		; Set the tile number we want to use
-		ld de, MazeMap01
+		ld de, MazeMap02
 
 		; Set counter for number of rows
 		ld b, 18
