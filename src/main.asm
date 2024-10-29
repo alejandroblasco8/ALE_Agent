@@ -152,6 +152,7 @@ main::
         call physys_move_player
 
         ; No need for wait for vblank
+		call _wait_vblank_start
         call aisys_enemies_shoot
         call check_enemy_collisions
     jp .loop

@@ -289,8 +289,21 @@ aisys_enemies_shoot::
         sub 4
         ld l, a
 
-        ld a, [hl]
+        ld a, [hl-]
         sub PROJECTILE_SPEED
+        ld b, a ;; B -> X
+        push bc
+        ld a, [hl+] ;; A -> Y
+        push hl
+
+        call check_tile_h_l
+
+        pop hl
+        pop bc
+        ld a, b
+
+        jr z, reset_projectile
+
         ld [hl], a
 
         ld a, 3
@@ -311,8 +324,20 @@ aisys_enemies_shoot::
         sub 4
         ld l, a
 
-        ld a, [hl]
+        ld a, [hl-]
         add PROJECTILE_SPEED
+
+        ld b, a ;; B -> X
+        push bc
+        ld a, [hl+] ;; A -> Y
+        push hl
+
+        call check_tile_h_r
+
+        pop hl
+        pop bc
+        ld a, b
+
         ld [hl], a
 
         ld a, 3
@@ -333,8 +358,20 @@ aisys_enemies_shoot::
         sub 5
         ld l, a
 
-        ld a, [hl]
+        ld a, [hl-]
         add PROJECTILE_SPEED
+
+        ld b, a ;; B -> X
+        push bc
+        ld a, [hl+] ;; A -> Y
+        push hl
+
+        call check_tile_v_d
+
+        pop hl
+        pop bc
+        ld a, b
+
         ld [hl], a
 
         ld a, 4
@@ -355,8 +392,20 @@ aisys_enemies_shoot::
         sub 5
         ld l, a
 
-        ld a, [hl]
+        ld a, [hl-]
         sub PROJECTILE_SPEED
+
+        ld b, a ;; B -> X
+        push bc
+        ld a, [hl+] ;; A -> Y
+        push hl
+
+        call check_tile_v_u
+
+        pop hl
+        pop bc
+        ld a, b
+
         ld [hl], a
 
         ld a, 4
@@ -369,7 +418,8 @@ aisys_enemies_shoot::
         .next_projectile:
 
         dec c
-        jr nz, .loop
+        ret z
+        jp .loop
 
     ret
 
@@ -417,5 +467,132 @@ reset_projectile::
     ld a, [hl]
     sub e
     ld [hl], a
+
+    ret
+
+check_tile_h_l::
+
+    sub 16
+    add HEIGHT/2
+    and a, %11111000
+    ld l, a
+    ld h, 0
+
+    add hl, hl ; position * 16
+    add hl, hl ; position * 32
+
+    ld a, b
+    sub 8
+    srl a ; a / 2
+    srl a ; a / 4
+    srl a ; a / 8
+
+
+    ld b, 0
+    ld c, a
+    add hl, bc
+    ld bc, $9800
+    add hl, bc
+
+    ld a, [hl]
+    push de
+    call check_collisions
+    pop de
+
+    ret
+
+
+check_tile_h_r::
+
+    sub 16
+    add HEIGHT/2
+    and a, %11111000
+    ld l, a
+    ld h, 0
+
+    add hl, hl ; position * 16
+    add hl, hl ; position * 32
+
+    ld a, b
+    sub 8
+    add WIDTH
+    srl a ; a / 2
+    srl a ; a / 4
+    srl a ; a / 8
+
+
+    ld b, 0
+    ld c, a
+    add hl, bc
+    ld bc, $9800
+    add hl, bc
+
+    ld a, [hl]
+    push de
+    call check_collisions
+    pop de
+
+    ret
+
+check_tile_v_u::
+
+    sub 16
+    and a, %11111000
+    ld l, a
+    ld h, 0
+
+    add hl, hl ; position * 16
+    add hl, hl ; position * 32
+
+    ld a, b
+    sub 8
+    add WIDTH/2
+    srl a ; a / 2
+    srl a ; a / 4
+    srl a ; a / 8
+
+
+    ld b, 0
+    ld c, a
+    add hl, bc
+    ld bc, $9800
+    add hl, bc
+
+    ld a, [hl]
+    push de
+    call check_collisions
+    pop de
+
+    ret
+
+check_tile_v_d::
+
+    sub 16
+    add HEIGHT
+    and a, %11111000
+    ld l, a
+    ld h, 0
+
+    add hl, hl ; position * 16
+    add hl, hl ; position * 32
+
+    ld a, b
+    sub 8
+    add WIDTH/2
+    srl a ; a / 2
+    srl a ; a / 4
+    srl a ; a / 8
+
+
+    ld b, 0
+    ld c, a
+    add hl, bc
+    ld bc, $9800
+    add hl, bc
+
+    ld a, [hl]
+    push de
+    call check_collisions
+    pop de
 
     ret
