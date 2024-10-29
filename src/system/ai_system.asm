@@ -338,6 +338,8 @@ aisys_enemies_shoot::
         pop bc
         ld a, b
 
+        jr z, reset_projectile
+
         ld [hl], a
 
         ld a, 3
@@ -372,6 +374,8 @@ aisys_enemies_shoot::
         pop bc
         ld a, b
 
+        jr z, reset_projectile
+
         ld [hl], a
 
         ld a, 4
@@ -405,6 +409,8 @@ aisys_enemies_shoot::
         pop hl
         pop bc
         ld a, b
+
+        jr z, reset_projectile
 
         ld [hl], a
 
