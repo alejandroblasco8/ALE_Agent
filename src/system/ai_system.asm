@@ -341,10 +341,14 @@ aisys_enemies_shoot::
         pop bc
         ld a, b
 
-        ;;jr z, reset_projectile
-
         ld [hl], a
 
+        jr nz, .no_collision_h_r
+        ld a, H_R_CODE
+        jp reset_projectile
+
+        
+        .no_collision_h_r
         ld a, 3
         add l
         ld l, a
@@ -363,12 +367,12 @@ aisys_enemies_shoot::
         sub 5
         ld l, a
 
-        ld a, [hl-]
+        ld a, [hl+]
         add PROJECTILE_SPEED
 
-        ld b, a ;; B -> X
+        ld b, a ;; B -> Y
         push bc
-        ld a, [hl+] ;; A -> Y
+        ld a, [hl-] ;; A -> X
         push hl
 
         call check_tile_v_d
@@ -376,11 +380,14 @@ aisys_enemies_shoot::
         pop hl
         pop bc
         ld a, b
-
-        ;;jr z, reset_projectile
-
         ld [hl], a
 
+        jr nz, .no_collision_v_d
+        ld a, V_D_CODE
+        jp reset_projectile
+        
+
+        .no_collision_v_d
         ld a, 4
         add l
         ld l, a
@@ -399,12 +406,12 @@ aisys_enemies_shoot::
         sub 5
         ld l, a
 
-        ld a, [hl-]
+        ld a, [hl+]
         sub PROJECTILE_SPEED
 
-        ld b, a ;; B -> X
+        ld b, a ;; B -> Y
         push bc
-        ld a, [hl+] ;; A -> Y
+        ld a, [hl-] ;; A -> X
         push hl
 
         call check_tile_v_u
@@ -412,11 +419,13 @@ aisys_enemies_shoot::
         pop hl
         pop bc
         ld a, b
-
-        ;;jr z, reset_projectile
-
         ld [hl], a
 
+        jr nz, .no_collision_v_u
+        ld a, V_U_CODE
+        jp reset_projectile
+
+        .no_collision_v_u
         ld a, 4
         add l
         ld l, a
@@ -437,46 +446,45 @@ aisys_enemies_shoot::
 ; if a is horizontal x should be passed
 ; if a is vertical y should be passed
 reset_projectile::
+
+    ; Save entity position
+    ld b, h
+    ld c, l
+    ; Jump to specific type of entity code
     cp H_L_CODE
-    jr z, .h
+    jr z, .h_l
 
     cp H_R_CODE
-    jr z, .h
+    jr z, .x
 
     cp V_D_CODE
-    jr z, .v
+    jr z, .x
 
     cp V_U_CODE
-    jr z, .v
+    jr z, .x
 
-    .h
+    .h_l
 
-    ld bc, 4
-    jr .reset
+    ; Move to steps done propierty
+    ld de, 4
+    add hl, de
 
-    .v
-
-    ld bc, 5
-
-    .reset
-
-    add hl, bc
+    ; Retrieve steps done
     ld e, [hl]
 
-    ; Back to position
-    ld a, l
-    sub c
-    ld l, a
-    ld a, h
-    ld c, 0
-    sbc c
-    ld h, a
+    ; Reset steps done
+    xor a
+    ld [hl], a
 
-    ; Substract steps done
+    ; Reset pointer
+    ld h, b
+    ld l, c
+    ; Reset position
     ld a, [hl]
     sub e
     ld [hl], a
 
+    .x
     ret
 
 check_tile_h_l::
@@ -545,6 +553,8 @@ check_tile_h_r::
 
 check_tile_v_u::
 
+    ld c, a
+    ld a, b
     sub 16
     and a, %11111000
     ld l, a
@@ -553,7 +563,7 @@ check_tile_v_u::
     add hl, hl ; position * 16
     add hl, hl ; position * 32
 
-    ld a, b
+    ld a, c
     sub 8
     add WIDTH/2
     srl a ; a / 2
@@ -575,7 +585,8 @@ check_tile_v_u::
     ret
 
 check_tile_v_d::
-
+    ld c, a
+    ld a, b
     sub 16
     add HEIGHT
     and a, %11111000
@@ -585,7 +596,7 @@ check_tile_v_d::
     add hl, hl ; position * 16
     add hl, hl ; position * 32
 
-    ld a, b
+    ld a, c
     sub 8
     add WIDTH/2
     srl a ; a / 2
