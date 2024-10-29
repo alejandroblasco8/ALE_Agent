@@ -455,13 +455,13 @@ reset_projectile::
     jr z, .h_l
 
     cp H_R_CODE
-    jr z, .h_r
+    jr z, .x
 
     cp V_D_CODE
-    jr z, .v_d
+    jr z, .x
 
     cp V_U_CODE
-    jr z, .v_u
+    jr z, .x
 
     .h_l
 
@@ -479,84 +479,22 @@ reset_projectile::
     ; Reset pointer
     ld h, b
     ld l, c
+    ; Reset steps done
+    xor a
+    ld [hl], a
 
+    ; Reset pointer
+    ld h, b
+    ld l, c
+
+    ; Reset position
     ; Reset position
     ld a, [hl]
     sub e
     ld [hl], a
 
-    ret
 
-    .h_r
-
-    ; Move to steps done propierty
-    ld de, 4
-    add hl, de
-
-    ; Retrieve steps done
-    ld e, [hl]
-
-    ; Reset steps done
-    xor a
-    ld [hl], a
-
-    ; Reset pointer
-    ld h, b
-    ld l, c
-
-    ; Reset position
-    ld a, [hl]
-    add e
-    ld [hl], a
-
-    ret
-
-    .v_d
-
-    ; Move to steps done propierty
-    ld de, 5
-    add hl, de
-
-    ; Retrieve steps done
-    ld e, [hl]
-
-    ; Reset steps done
-    xor a
-    ld [hl], a
-
-    ; Reset pointer
-    ld h, b
-    ld l, c
-
-    ; Reset position
-    ld a, [hl]
-    sub e
-    ld [hl], a
-
-    ret
-
-    .v_u
-
-    ; Move to steps done propierty
-    ld de, 5
-    add hl, de
-
-    ; Retrieve steps done
-    ld e, [hl]
-
-    ; Reset steps done
-    xor a
-    ld [hl], a
-
-    ; Reset pointer
-    ld h, b
-    ld l, c
-
-    ; Reset position
-    ld a, [hl]
-    add e
-    ld [hl], a
-
+    .x
     ret
 
 check_tile_h_l::
