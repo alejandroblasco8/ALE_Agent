@@ -446,22 +446,22 @@ aisys_enemies_shoot::
 ; if a is horizontal x should be passed
 ; if a is vertical y should be passed
 reset_projectile::
-
     ; Save entity position
     ld b, h
     ld c, l
+
     ; Jump to specific type of entity code
     cp H_L_CODE
     jr z, .h_l
 
     cp H_R_CODE
-    jr z, .x
+    jr z, .h_r
 
     cp V_D_CODE
-    jr z, .x
+    jr z, .v_d
 
     cp V_U_CODE
-    jr z, .x
+    jr z, .v_u
 
     .h_l
 
@@ -479,12 +479,84 @@ reset_projectile::
     ; Reset pointer
     ld h, b
     ld l, c
+
     ; Reset position
     ld a, [hl]
     sub e
     ld [hl], a
 
-    .x
+    ret
+
+    .h_r
+
+    ; Move to steps done propierty
+    ld de, 4
+    add hl, de
+
+    ; Retrieve steps done
+    ld e, [hl]
+
+    ; Reset steps done
+    xor a
+    ld [hl], a
+
+    ; Reset pointer
+    ld h, b
+    ld l, c
+
+    ; Reset position
+    ld a, [hl]
+    add e
+    ld [hl], a
+
+    ret
+
+    .v_d
+
+    ; Move to steps done propierty
+    ld de, 5
+    add hl, de
+
+    ; Retrieve steps done
+    ld e, [hl]
+
+    ; Reset steps done
+    xor a
+    ld [hl], a
+
+    ; Reset pointer
+    ld h, b
+    ld l, c
+
+    ; Reset position
+    ld a, [hl]
+    sub e
+    ld [hl], a
+
+    ret
+
+    .v_u
+
+    ; Move to steps done propierty
+    ld de, 5
+    add hl, de
+
+    ; Retrieve steps done
+    ld e, [hl]
+
+    ; Reset steps done
+    xor a
+    ld [hl], a
+
+    ; Reset pointer
+    ld h, b
+    ld l, c
+
+    ; Reset position
+    ld a, [hl]
+    add e
+    ld [hl], a
+
     ret
 
 check_tile_h_l::
