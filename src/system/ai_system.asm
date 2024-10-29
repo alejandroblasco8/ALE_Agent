@@ -301,11 +301,14 @@ aisys_enemies_shoot::
         pop hl
         pop bc
         ld a, b
-
-        jr z, reset_projectile
-
+        
         ld [hl], a
-
+        jr nz, .no_collision_h_l
+        
+        ld a, H_L_CODE
+        jp reset_projectile
+        
+        .no_collision_h_l
         ld a, 3
         add l
         ld l, a
@@ -338,7 +341,7 @@ aisys_enemies_shoot::
         pop bc
         ld a, b
 
-        jr z, reset_projectile
+        ;;jr z, reset_projectile
 
         ld [hl], a
 
@@ -374,7 +377,7 @@ aisys_enemies_shoot::
         pop bc
         ld a, b
 
-        jr z, reset_projectile
+        ;;jr z, reset_projectile
 
         ld [hl], a
 
@@ -410,7 +413,7 @@ aisys_enemies_shoot::
         pop bc
         ld a, b
 
-        jr z, reset_projectile
+        ;;jr z, reset_projectile
 
         ld [hl], a
 
