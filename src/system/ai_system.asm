@@ -259,6 +259,7 @@ aisys_enemies_shoot::
     ld de, ENTITY_SIZE
 
     ld a, [_num_entities]
+    dec a
     cp 0
     ret z
 
@@ -289,26 +290,9 @@ aisys_enemies_shoot::
         sub 4
         ld l, a
 
-        ld a, [hl-]
+        ld a, [hl]
         sub PROJECTILE_SPEED
-        ld b, a ;; B -> X
-        push bc
-        ld a, [hl+] ;; A -> Y
-        push hl
-
-        call check_tile_h_l
-
-        pop hl
-        pop bc
-        ld a, b
-        
         ld [hl], a
-        jr nz, .no_collision_h_l
-        
-        ld a, H_L_CODE
-        jp reset_projectile
-        
-        .no_collision_h_l
         ld a, 3
         add l
         ld l, a
@@ -327,28 +311,10 @@ aisys_enemies_shoot::
         sub 4
         ld l, a
 
-        ld a, [hl-]
+        ld a, [hl]
         add PROJECTILE_SPEED
-
-        ld b, a ;; B -> X
-        push bc
-        ld a, [hl+] ;; A -> Y
-        push hl
-
-        call check_tile_h_r
-
-        pop hl
-        pop bc
-        ld a, b
-
         ld [hl], a
 
-        jr nz, .no_collision_h_r
-        ld a, H_R_CODE
-        jp reset_projectile
-
-        
-        .no_collision_h_r
         ld a, 3
         add l
         ld l, a
@@ -367,25 +333,9 @@ aisys_enemies_shoot::
         sub 5
         ld l, a
 
-        ld a, [hl+]
+        ld a, [hl]
         add PROJECTILE_SPEED
-
-        ld b, a ;; B -> Y
-        push bc
-        ld a, [hl-] ;; A -> X
-        push hl
-
-        call check_tile_v_d
-
-        pop hl
-        pop bc
-        ld a, b
         ld [hl], a
-
-        jr nz, .no_collision_v_d
-        ld a, V_D_CODE
-        jp reset_projectile
-        
 
         .no_collision_v_d
         ld a, 4
@@ -406,26 +356,10 @@ aisys_enemies_shoot::
         sub 5
         ld l, a
 
-        ld a, [hl+]
+        ld a, [hl]
         sub PROJECTILE_SPEED
-
-        ld b, a ;; B -> Y
-        push bc
-        ld a, [hl-] ;; A -> X
-        push hl
-
-        call check_tile_v_u
-
-        pop hl
-        pop bc
-        ld a, b
         ld [hl], a
 
-        jr nz, .no_collision_v_u
-        ld a, V_U_CODE
-        jp reset_projectile
-
-        .no_collision_v_u
         ld a, 4
         add l
         ld l, a
@@ -482,7 +416,7 @@ reset_projectile::
 
     ; Reset position
     ld a, [hl]
-    sub e
+    add e
     ld [hl], a
 
     ret
@@ -556,135 +490,5 @@ reset_projectile::
     ld a, [hl]
     add e
     ld [hl], a
-
-    ret
-
-check_tile_h_l::
-
-    sub 16
-    add HEIGHT/2
-    and a, %11111000
-    ld l, a
-    ld h, 0
-
-    add hl, hl ; position * 16
-    add hl, hl ; position * 32
-
-    ld a, b
-    sub 8
-    srl a ; a / 2
-    srl a ; a / 4
-    srl a ; a / 8
-
-
-    ld b, 0
-    ld c, a
-    add hl, bc
-    ld bc, $9800
-    add hl, bc
-
-    ld a, [hl]
-    push de
-    call check_collisions
-    pop de
-
-    ret
-
-
-check_tile_h_r::
-
-    sub 16
-    add HEIGHT/2
-    and a, %11111000
-    ld l, a
-    ld h, 0
-
-    add hl, hl ; position * 16
-    add hl, hl ; position * 32
-
-    ld a, b
-    sub 8
-    add WIDTH
-    srl a ; a / 2
-    srl a ; a / 4
-    srl a ; a / 8
-
-
-    ld b, 0
-    ld c, a
-    add hl, bc
-    ld bc, $9800
-    add hl, bc
-
-    ld a, [hl]
-    push de
-    call check_collisions
-    pop de
-
-    ret
-
-check_tile_v_u::
-
-    ld c, a
-    ld a, b
-    sub 16
-    and a, %11111000
-    ld l, a
-    ld h, 0
-
-    add hl, hl ; position * 16
-    add hl, hl ; position * 32
-
-    ld a, c
-    sub 8
-    add WIDTH/2
-    srl a ; a / 2
-    srl a ; a / 4
-    srl a ; a / 8
-
-
-    ld b, 0
-    ld c, a
-    add hl, bc
-    ld bc, $9800
-    add hl, bc
-
-    ld a, [hl]
-    push de
-    call check_collisions
-    pop de
-
-    ret
-
-check_tile_v_d::
-    ld c, a
-    ld a, b
-    sub 16
-    add HEIGHT
-    and a, %11111000
-    ld l, a
-    ld h, 0
-
-    add hl, hl ; position * 16
-    add hl, hl ; position * 32
-
-    ld a, c
-    sub 8
-    add WIDTH/2
-    srl a ; a / 2
-    srl a ; a / 4
-    srl a ; a / 8
-
-
-    ld b, 0
-    ld c, a
-    add hl, bc
-    ld bc, $9800
-    add hl, bc
-
-    ld a, [hl]
-    push de
-    call check_collisions
-    pop de
 
     ret

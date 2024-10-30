@@ -143,7 +143,7 @@ physys_check_collision_down::
     add hl, de
 
     ld a, [hl]
-    call check_collisions
+    call check_collisions_player_block
     pop de
     ret z
 
@@ -158,7 +158,7 @@ physys_check_collision_down::
     add hl, de
 
     ld a, [hl]
-    call check_collisions
+    call check_collisions_player_block
     ret z
 
     ld a, e
@@ -189,7 +189,7 @@ physys_check_collision_down::
     add hl, de
 
     ld a, [hl]
-    call check_collisions
+    call check_collisions_player_block
     pop de
     ret z
 
@@ -204,10 +204,10 @@ physys_check_collision_down::
     add hl, de
 
     ld a, [hl]
-    call check_collisions
+    call check_collisions_player_block
     ret 
     
-check_collisions::
+check_collisions_player_block::
     ld hl, CollisionTilesNumbers
     ld d, NUM_COLLISION_TILES
     ld e, a
@@ -223,8 +223,26 @@ check_collisions::
     .continue:
         or 1
         ret
+
+check_collisions_enemy_block::
+    ld hl, CollisionEnemyTilesNumbers
+    ld d, NUM_COLLISION_ENEMY_TILES
+    ld e, a
+
+    .collision_solid_loop:
+
+        ld a, [hl+]
+        cp e
+        ret z
+        dec d
+        jr nz, .collision_solid_loop
     
-check_enemy_collisions::
+    .continue:
+        or 1
+        ret
+
+    
+check_player_enemy_collisions::
     call entityman_getEntityArray_HL
 
     ld a, [hl+]
@@ -284,7 +302,7 @@ check_enemy_collisions::
             sub c
     
     .diff_less_than:
-        cp 3 ;;No da Z = 1 si a no es exactamente 30 
+        cp 4
         ret
 
     .reset_pos:
@@ -317,3 +335,286 @@ check_goal_entry::
 
     
 
+check_enemy_solid_collisions::
+
+    ld hl, _entities_array + ENTITY_SIZE - 2
+    ld bc, ENTITY_SIZE
+
+    ld a, [_num_entities]
+    dec a
+    cp 0
+    ret z
+
+    ld e, a
+
+    .loop:
+        add hl, bc
+        ld a, [hl]
+
+        cp H_L_CODE
+        jr z, .check_h_l
+
+        cp H_R_CODE
+        jr z, .check_h_r
+
+        cp V_D_CODE
+        jr z, .check_v_d
+
+        cp V_U_CODE
+        jr z, .check_v_u
+
+        .check_h_l:
+
+            ld a, l
+            sub 3
+            ld l, a
+            ld a, [hl-] ;;X
+            ld d, a
+            ld a, [hl+] ;;Y
+
+            push hl
+            push de
+            push bc
+            call check_tile_h_l
+            pop bc
+            pop de
+            pop hl
+
+            ld a, 3
+            add l
+            ld l, a
+            ld a, 0
+            adc h
+            ld h, a
+
+            jr .next_enemy
+
+        .check_h_r:
+            ld a, l
+            sub 3
+            ld l, a
+            ld a, [hl-] ;;X
+            ld d, a
+            ld a, [hl+] ;;Y
+
+            push hl
+            push de
+            push bc
+            call check_tile_h_r
+            pop bc
+            pop de
+            pop hl
+
+            ld a, 3
+            add l
+            ld l, a
+            ld a, 0
+            adc h
+            ld h, a
+
+            jr .next_enemy
+        .check_v_d:
+
+            ld a, l
+            sub 4
+            ld l, a
+            ld a, [hl+] ;;Y
+            ld d, a
+            ld a, [hl-] ;;X
+
+            push hl
+            push de
+            push bc
+            call check_tile_v_d
+            pop bc
+            pop de
+            pop hl
+
+            ld a, 4
+            add l
+            ld l, a
+            ld a, 0
+            adc h
+            ld h, a
+
+            jr .next_enemy
+        .check_v_u:
+            ld a, l
+            sub 4
+            ld l, a
+            ld a, [hl+] ;;Y
+            ld d, a
+            ld a, [hl-] ;;X
+
+            push hl
+            push de
+            push bc
+            call check_tile_v_d
+            pop bc
+            pop de
+            pop hl
+
+            ld a, 4
+            add l
+            ld l, a
+            ld a, 0
+            adc h
+            ld h, a
+
+            jr .next_enemy
+        
+        .next_enemy:
+            dec e
+            ret z
+            jp .loop
+    
+    ret
+
+
+check_tile_h_l::
+    
+    push hl
+    sub 16
+    add HEIGHT/2
+    and a, %11111000
+    ld l, a
+    ld h, 0
+
+    add hl, hl ; position * 16
+    add hl, hl ; position * 32
+
+    ld a, d
+    sub 8
+    srl a ; a / 2
+    srl a ; a / 4
+    srl a ; a / 8
+
+
+    ld d, 0
+    ld e, a
+    add hl, de
+    ld de, $9800
+    add hl, de
+
+    ld a, [hl]
+    call check_collisions_enemy_block
+    pop hl
+    jr nz, .no_reset_h_l
+        ld a, H_L_CODE
+        call reset_projectile
+    .no_reset_h_l
+    ret
+
+
+check_tile_h_r::
+
+    push hl
+    sub 16
+    add HEIGHT/2
+    and a, %11111000
+    ld l, a
+    ld h, 0
+
+    add hl, hl ; position * 16
+    add hl, hl ; position * 32
+
+    ld a, d
+    sub 8
+    add WIDTH
+    srl a ; a / 2
+    srl a ; a / 4
+    srl a ; a / 8
+
+
+    ld d, 0
+    ld e, a
+    add hl, de
+    ld de, $9800
+    add hl, de
+
+    ld a, [hl]
+    call check_collisions_enemy_block
+    pop hl
+    jr nz, .no_reset_h_r
+        ld a, H_R_CODE
+        call reset_projectile
+    .no_reset_h_r
+
+    ret
+
+check_tile_v_u::
+
+    push hl
+
+    ld e, a
+    ld a, d
+    sub 16
+    and a, %11111000
+    ld l, a
+    ld h, 0
+
+    add hl, hl ; position * 16
+    add hl, hl ; position * 32
+
+    ld a, e
+    sub 8
+    add WIDTH/2
+    srl a ; a / 2
+    srl a ; a / 4
+    srl a ; a / 8
+
+
+    ld d, 0
+    ld e, a
+    add hl, de
+    ld de, $9800
+    add hl, de
+
+    ld a, [hl]
+    call check_collisions_enemy_block
+    pop hl
+    jr nz, .no_reset_v_d
+        ld a, V_D_CODE
+        call reset_projectile
+    .no_reset_v_d
+
+    ret
+
+check_tile_v_d::
+
+    push hl
+
+    ld e, a
+    ld a, d
+    sub 16
+    add HEIGHT
+    and a, %11111000
+    ld l, a
+    ld h, 0
+
+    add hl, hl ; position * 16
+    add hl, hl ; position * 32
+
+    ld a, e
+    sub 8
+    add WIDTH/2
+    srl a ; a / 2
+    srl a ; a / 4
+    srl a ; a / 8
+
+
+    ld d, 0
+    ld e, a
+    add hl, de
+    ld de, $9800
+    add hl, de
+
+    ld a, [hl]
+    call check_collisions_enemy_block
+    pop hl
+    jr nz, .no_reset_v_d
+        ld a, V_D_CODE
+        call reset_projectile
+    .no_reset_v_d
+
+    ret

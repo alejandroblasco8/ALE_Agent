@@ -95,3 +95,6 @@ DB $18,$18,$24,$24,$00,$00,$00,$00
 
 CollisionTilesNumbers::
 DB $07,$08,$09,$0A,$0C,$0D
+
+CollisionEnemyTilesNumbers::
+DB $05,$06,$07,$08
