@@ -162,7 +162,7 @@ physys_check_collision_down::
     ret z
 
     ld a, e
-    cp $03
+    cp END_LEVEL_TILE
     call check_goal_entry
     ret z
 
