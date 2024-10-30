@@ -47,7 +47,7 @@ main::
 	ld hl, $9800
 
 	; Set the tile number we want to use
-	ld de, PantallaInicio
+	ld de, StartScreen
 
 	; Set counter for number of rows
 	ld b, 18
@@ -90,7 +90,7 @@ main::
 		ld hl, $9800
 
 		; Set the tile number we want to use
-		ld de, MazeMap02
+		ld de, Map02
 
 		; Set counter for number of rows
 		ld b, 18
