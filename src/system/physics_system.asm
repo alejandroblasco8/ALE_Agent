@@ -573,10 +573,10 @@ check_tile_v_u::
     ld a, [hl]
     call check_collisions_enemy_block
     pop hl
-    jr nz, .no_reset_v_d
-        ld a, V_D_CODE
+    jr nz, .no_reset_v_u
+        ld a, V_U_CODE
         call reset_projectile
-    .no_reset_v_d
+    .no_reset_v_u
 
     ret
 

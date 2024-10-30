@@ -440,7 +440,7 @@ reset_projectile::
 
     ; Reset position
     ld a, [hl]
-    add e
+    sub e
     ld [hl], a
 
     ret

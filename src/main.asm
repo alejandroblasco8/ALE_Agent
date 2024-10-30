@@ -90,7 +90,7 @@ main::
 		ld hl, $9800
 
 		; Set the tile number we want to use
-		ld de, Map02
+		ld de, Map04
 
 		; Set counter for number of rows
 		ld b, 18
@@ -157,6 +157,7 @@ main::
         call check_player_enemy_collisions
 		call _wait_vblank_start
 		call check_enemy_solid_collisions
+		
     jp .loop
 
 	call game_over
