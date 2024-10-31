@@ -18,17 +18,15 @@ include "constants.asm"
 
 SECTION "Entry point", ROM0[$250]
 
-
-;;player1: db 28, 20, $04, 0, 7, 8
-
-
 main::
+
 
 	call scenes_startscreen
 
 	call next_level
 
     .loop
+    
         ; No need for wait for vblank
         call aisys_enemies_shoot
         call check_collisions_player_enemy

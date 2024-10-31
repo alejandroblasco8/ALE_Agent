@@ -30,9 +30,18 @@ notas:
 _wait_button:
 
     .loop:
+        call aisys_enemies_shoot
+		call check_collisions_enemy_solid
+
+        ld de, _copy_entity_to_OAM
+        ld hl, _entities_array
+        ld bc, OAM_START_ADDR
+
+        call _wait_vblank_start
+        call entityman_for_each
+
         ldh a, [$00]
         and %00000100 ;UP pressed
-        ;jp .loop
         jr z, .pressed
     jp .loop
     
@@ -40,6 +49,7 @@ _wait_button:
         ret
 
 scenes_startscreen::
+    call init_entity_manager
     call start_drawing
 
  ; Load default palette
@@ -99,11 +109,21 @@ scenes_startscreen::
     ld a, 2
     ld [CurrentLevel], a
 
+    ld hl, OAM_START_ADDR
+    ld bc, 160
+    call _clear_memory
+
+    ld hl, player1
+    call entityman_create
+    call entityman_getEntityArray_HL
+    inc hl
+    inc hl
+    ld [hl], 0
+    call aisys_init_enemies
+
 	call end_drawing
 
     call _wait_button
-
-    call init_entity_manager
 
     ret
 
@@ -233,6 +253,12 @@ next_level:
         ld bc, 160
         call _clear_memory
 
+        ld hl, player1
+        call entityman_create
+        call entityman_getEntityArray_HL
+        inc hl
+        inc hl
+        ld [hl], 0
         call aisys_init_enemies
 
         call end_drawing
