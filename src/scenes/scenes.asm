@@ -273,13 +273,13 @@ init_sound:
     ; Configurar los registros globales de sonido
     LD A, $77
     LDh [$24], A  ; NR50, configuración de volumen
-    ld a, $80    ; se pone en $11 cuando queramos sonido
+    ld a, $80
     LDh [$26], A  ; NR51, encaminamiento del sonido
 
     ; Configurar el Canal 2 para una onda cuadrada
-    LD A, $C1;$80   ; NR21, ciclo de trabajo 50% (10 en los bits 7 y 6), longitud máxima
+    LD A, $Cf   ; NR21
     LDh [$16], A
-    LD A, $f9;$80   ; NR22, volumen máximo inicial, volumen no decreciente
+    LD A, $f9   ; NR22
     LDh [$17], A
 
     LD A, $ff
@@ -332,11 +332,12 @@ next_note:
     ld h, d
     ld l, e
 
-    LD A, [HLI]  ; Cargar parte baja del período (NR23)
-    LDh [$18], A
-    LD A, [HLI]  ; Cargar parte alta del período y banderas de control (NR24)
+
+    LD A, [HL+]  ; Cargar parte alta del período y banderas de control (NR24)
     or %10000000 ; asegurar que el bit 7 esté en alto para activar el canal
     LDh [$19], A
+    LD A, [HL+]  ; Cargar parte baja del período (NR23)
+    LDh [$18], A
     ret
 
     ; bucle para reproducir una secuencia de notas
