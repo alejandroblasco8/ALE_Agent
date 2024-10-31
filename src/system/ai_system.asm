@@ -4,66 +4,6 @@ SECTION "AI SYSTEM", ROM0
 
 _projectile: db $00, $00, $00, 0, 0, 0, 0
 
-; HL => VRAM
-; OUT => BC (YX)
-_get_y_x_coords_from_vram:
-    ld de, $9800
-
-    ld a, l
-    sub e
-    ld l, a
-
-    ld a, h
-    sbc d
-    ld h, a
-
-    ld de, 32
-    ld b, 0
-
-    .loop_32
-        ld a, l
-        sub e
-        ld l, a
-
-        ld a, h
-        sbc d
-        ld h, a
-
-        inc b
-
-        cp 0
-        jr nz, .loop_32
-
-        ld a, l
-        cp 32
-        jr nc, .loop_32
-
-    ld a, b
-
-    sla a
-    sla a
-    sla a
-
-    ld b, OAM_Y_DISPLACEMENT
-    add b
-
-    ; Save Y Coord
-    ld b, a
-
-    ; Set X Coord
-    ld a, l
-
-    sla a
-    sla a
-    sla a
-
-    ld d, OAM_X_DISPLACEMENT - 8
-    add d
-
-    ; Save X Coord
-    ld c, a
-
-    ret
 
 
 aisys_init_enemies:
@@ -320,15 +260,73 @@ aisys_init_enemies:
 
         ; Set tile collision
         push de
+        push af
         call _get_colission_tile
+        call get_y_x_coords_from_vram
+        pop af
         pop de
 
         ; Restore WRAM pointer
         ld h, d
         ld l, e
 
-        ; Set collision tile
-        ld [hl+], a
+        cp H_L_SHOOTER
+        jr z, .set_x_coord_l
+        cp H_R_SHOOTER
+        jr z, .set_x_coord_r
+
+        cp V_D_SHOOTER
+        jr z, .set_y_coord_d
+        cp V_U_SHOOTER
+        jr z, .set_y_coord_u
+
+        .set_x_coord_l
+        ; Set collision coord
+        ld a, c
+
+        ; Readjust for better visual collision
+        ld c, 24
+        add c
+
+        ld [hl], a
+
+        jr .end_set_coord
+
+        .set_x_coord_r
+        ; Set collision coord
+        ld a, c
+
+        ; Readjust for better visual collision
+        ld c, 8
+        sub c
+
+        ld [hl], a
+
+        jr .end_set_coord
+
+        .set_y_coord_d
+
+        ld a, b
+
+        ; Readjust for better visual collision
+        ld c, 8
+        sub c
+
+        ld [hl], a
+
+        jr .end_set_coord
+
+        .set_y_coord_u
+
+        ld a, b
+
+        ; Readjust for better visual collision
+        ld c, 8
+        add c
+
+        ld [hl], a
+
+        .end_set_coord
 
         ; Retrieve VRAM pointer
         pop hl
@@ -422,12 +420,12 @@ _get_colission_tile:
     ld de, $20
 
     .loop_v_u:
-        ld a, h
-        sub d
-        ld h, a
         ld a, l
-        sbc e
+        sub e
         ld l, a
+        ld a, h
+        sbc d
+        ld h, a
 
         ld a, [hl]
         push hl
