@@ -143,9 +143,10 @@ main::
         ; No need for wait for vblank
         call aisys_enemies_shoot
         call check_player_enemy_collisions
-
-		call _wait_vblank_start
 		call check_enemy_solid_collisions
+
+        call _wait_vblank_start
+        call physys_move_player
 
         ld de, _copy_entity_to_OAM
         ld hl, _entities_array
@@ -153,7 +154,7 @@ main::
 
         call _wait_vblank_start
         call entityman_for_each
-        call physys_move_player
+
 
     jp .loop
 
