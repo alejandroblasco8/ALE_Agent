@@ -22,7 +22,6 @@ main::
 
 
 	call scenes_startscreen
-
 	call next_level
 
     .loop
