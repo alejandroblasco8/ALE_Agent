@@ -41,20 +41,3 @@ _copy_entity_to_OAM:
     ld c, l
 
 	ret
-	
-;; #############################################################################
-;; Renders the entities by copying their data to the OAM.
-;;
-;; INPUT: None
-;;
-;; OUTPUT: None
-;;
-;; MODIFIES: AF, BC, HL
-;; #############################################################################
-render_entities:
-    ld a, 0
-    ld bc, OAM_START_ADDR
-    ld de, _copy_entity_to_OAM
-	call entityman_for_each
-
-	ret

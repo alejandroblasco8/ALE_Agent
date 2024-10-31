@@ -304,7 +304,7 @@ check_collisions_enemy_block::
         ret
 
     
-check_player_enemy_collisions::
+check_collisions_player_enemy::
     call entityman_getEntityArray_HL
 
     ld a, [hl+]
@@ -395,7 +395,7 @@ check_goal_entry::
 
     
 
-check_enemy_solid_collisions::
+check_collisions_enemy_solid::
     ld hl, _entities_array + ENTITY_SIZE - 3
 
     ld a, [_num_entities]
@@ -486,153 +486,4 @@ check_enemy_solid_collisions::
             ret z
             jp .loop
     
-    ret
-
-
-check_tile_h_l::
-    
-    push hl
-    sub 16
-    add HEIGHT/2
-    and a, %11111000
-    ld l, a
-    ld h, 0
-
-    add hl, hl ; position * 16
-    add hl, hl ; position * 32
-
-    ld a, d
-    sub 8
-    srl a ; a / 2
-    srl a ; a / 4
-    srl a ; a / 8
-
-
-    ld d, 0
-    ld e, a
-    add hl, de
-    ld de, $9800
-    add hl, de
-
-    ld a, [hl]
-    call check_collisions_enemy_block
-    pop hl
-    jr nz, .no_reset_h_l
-        ld a, H_L_SHOOTER
-        call reset_projectile
-    .no_reset_h_l
-    ret
-
-
-check_tile_h_r::
-
-    push hl
-    sub 16
-    add HEIGHT/2
-    and a, %11111000
-    ld l, a
-    ld h, 0
-
-    add hl, hl ; position * 16
-    add hl, hl ; position * 32
-
-    ld a, d
-    sub 8
-    add WIDTH
-    srl a ; a / 2
-    srl a ; a / 4
-    srl a ; a / 8
-
-
-    ld d, 0
-    ld e, a
-    add hl, de
-    ld de, $9800
-    add hl, de
-
-    ld a, [hl]
-    call check_collisions_enemy_block
-    pop hl
-    jr nz, .no_reset_h_r
-        ld a, H_R_SHOOTER
-        call reset_projectile
-    .no_reset_h_r
-
-    ret
-
-check_tile_v_u::
-
-    push hl
-
-    ld e, a
-    ld a, d
-    sub 16
-    and a, %11111000
-    ld l, a
-    ld h, 0
-
-    add hl, hl ; position * 16
-    add hl, hl ; position * 32
-
-    ld a, e
-    sub 8
-    add WIDTH/2
-    srl a ; a / 2
-    srl a ; a / 4
-    srl a ; a / 8
-
-
-    ld d, 0
-    ld e, a
-    add hl, de
-    ld de, $9800
-    add hl, de
-
-    ld a, [hl]
-    call check_collisions_enemy_block
-    pop hl
-    jr nz, .no_reset_v_u
-        ld a, V_U_SHOOTER
-        call reset_projectile
-    .no_reset_v_u
-
-    ret
-
-check_tile_v_d::
-
-    push hl
-
-    ld e, a
-    ld a, d
-    sub 16
-    add HEIGHT
-    and a, %11111000
-    ld l, a
-    ld h, 0
-
-    add hl, hl ; position * 16
-    add hl, hl ; position * 32
-
-    ld a, e
-    sub 8
-    add WIDTH/2
-    srl a ; a / 2
-    srl a ; a / 4
-    srl a ; a / 8
-
-
-    ld d, 0
-    ld e, a
-    add hl, de
-    ld de, $9800
-    add hl, de
-
-    ld a, [hl]
-    call check_collisions_enemy_block
-    pop hl
-    jr nz, .no_reset_v_d
-        ld a, V_D_SHOOTER
-        call reset_projectile
-    .no_reset_v_d
-
     ret

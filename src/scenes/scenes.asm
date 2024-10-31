@@ -306,6 +306,3 @@ _wait_button_with_sound:
         dec b
         jr nz, delay_loop
         RET
-
-game_over:
-    ret

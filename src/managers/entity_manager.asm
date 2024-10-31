@@ -191,7 +191,7 @@ entityman_free_entity::
     ret
 
 ;; ############################################################################
-;; Checks if the entity is of type B
+;; Gets the entity identified by index A
 ;;
 ;; INPUT:
 ;;  -  A => Entity index
@@ -213,59 +213,6 @@ entityman_get_by_index::
         add hl, bc
         jr .loop_get_by_index
 
-
-;; ############################################################################
-;; Checks if the entity is of type B
-;;
-;; INPUT:
-;;  - HL => Pointer to the entity
-;;  -  B => Type to check if the entity is or not
-;;
-;; OUTPUT:
-;;  - Flag Z => Active if entity is of type B
-;;
-;; MODIFIES: AF
-;; ############################################################################
-
-entityman_is_of_type_b::
-    ld de, TYPE
-    add hl, de
-    ld a, [hl]
-    cp b
-    ret
-
-;; ############################################################################
-;; Find first entity that matches the type
-;;
-;; INPUT:
-;;	- B => Type of the entity to be found
-;;
-;; OUTPUT:
-;;  - HL => Points to the first type b entity
-;;
-;; MODIFIES: AF, C, HL
-;; ############################################################################
-
-entityman_find_first_by_type::
-
-    ld a, [_num_entities]
-    ld c, a
-    ld hl, _entities_array
-
-    .loop_find_first_by_type:
-        ;;Checks if there is not more available entities.
-        dec c
-        ld a, c
-        cp 255
-        ret z
-        push hl
-        call entityman_is_of_type_b
-        pop hl
-        ret z
-        add hl, de
-        jp .loop_find_first_by_type
-
-    ret
 
 ;; ############################################################################
 ;; Performs an operation on all the entities in the array:

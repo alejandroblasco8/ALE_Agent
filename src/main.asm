@@ -31,8 +31,8 @@ main::
     .loop
         ; No need for wait for vblank
         call aisys_enemies_shoot
-        call check_player_enemy_collisions
-		call check_enemy_solid_collisions
+        call check_collisions_player_enemy
+		call check_collisions_enemy_solid
 
         call _wait_vblank_start
         call physys_move_player
@@ -46,8 +46,6 @@ main::
 
 
     jp .loop
-
-	call game_over
 
    	di     ;; Disable Interrupts
    	halt   ;; Halt the CPU (stop procesing here)
