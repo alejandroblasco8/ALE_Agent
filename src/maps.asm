@@ -349,4 +349,4 @@ DB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00
 DB $00,$0A,$00,$00,$00,$00,$00,$00,$07,$00
 DB $00,$00,$07,$00,$00,$00,$00,$00,$09,$00
 
-levels: DW StartScreen, Map01, Map02, Map03, Map04, Map05, Map06, Map07, EndScreen
+levels: DW StartScreen, Map01, Map02, Map03, Map04, EndScreen

@@ -116,7 +116,7 @@ entityman_create::
 ;; Delete entity associated to A index
 ;;
 ;; INPUT:
-;;  -  A => Entity index
+;;  -  A => Entity index + 1
 ;;
 ;; MODIFIES: AF, BC, HL, DE
 ;; ############################################################################
@@ -124,6 +124,7 @@ entityman_create::
 entityman_free_entity::
 
     ;;Check if the index is inside the array range
+    dec a
     ld b, a
     ld a, [_num_entities]
     ld c, a

@@ -19,126 +19,14 @@ include "constants.asm"
 SECTION "Entry point", ROM0[$250]
 
 
-player1: db 28, 20, $04, 0, 7, 8
+;;player1: db 28, 20, $04, 0, 7, 8
 
 
 main::
-	call start_drawing
 
- ; Load default palette
-	ld a, %11100100
-	ld [$FF47], a
-	ld [$FF48], a
-	ld [$FF49], a
+	call scenes_startscreen
 
-   ld a, [$FF40]    ; Cargar el valor actual del registro LCDC
-   or %00000010     ; Habilitar sprites (bit 1 de LCDC)
-   ld [$FF40], a    ; Guardar el nuevo valor en LCDC
-
-	.init_tiles:
-		ld de, MazeTiles
-		ld hl, $8000
-		ld bc, 15*16
-		call _copy_bc_bytes_de2hl
-
-	; Mostrar pantalla de inicio
-
-	; Set HL to the start of the second row, second column
-	ld hl, $9800
-
-	; Set the tile number we want to use
-	ld de, StartScreen
-
-	; Set counter for number of rows
-	ld b, 18
-	.row_loop1:
-		; Set counter for number of columns
-		ld c, 20
-
-	.col_loop1:
-		; Write the tile number to VRAM
-		ld a, [de]
-		inc de
-
-		ld [hl+], a
-
-		; Decrement column counter
-		dec c
-		jr nz, .col_loop1
-
-		; Restore HL and move to the next row
-		push de
-
-		ld de, 12
-		add hl, de
-
-		pop de
-
-		; Decrement row counter
-		dec b
-		jr nz, .row_loop1
-
-
-	call end_drawing
-
-	call _wait_button
-
-	call start_drawing
-
-	.init_map:
-		; Set HL to the start of the second row, second column
-		ld hl, $9800
-
-		; Set the tile number we want to use
-		ld de, Map04
-
-		; Set counter for number of rows
-		ld b, 18
-
-		.row_loop:
-			; Set counter for number of columns
-			ld c, 20
-
-		.col_loop:
-			; Write the tile number to VRAM
-			ld a, [de]
-			inc de
-
-			ld [hl+], a
-
-			; Decrement column counter
-			dec c
-			jr nz, .col_loop
-
-			; Restore HL and move to the next row
-			push de
-
-			ld de, 12
-			add hl, de
-
-			pop de
-
-			; Decrement row counter
-			dec b
-			jr nz, .row_loop
-
-
-    ; Clear OAM memory
-     ld hl, OAM_START_ADDR
-     ld bc, 160
-     call _clear_memory
-
-   ; Initialize the entity manager
-    call init_entity_manager
-
-    ; Create the player entity
-    ld hl, player1
-    call entityman_create
-
-    ; Create the enemies entities
-    call aisys_init_enemies
-
-    call end_drawing
+	call next_level
 
     .loop
         ; No need for wait for vblank
@@ -147,7 +35,6 @@ main::
         ld bc, OAM_START_ADDR
 
         call _wait_vblank_start
-
         call entityman_for_each
         call physys_move_player
 

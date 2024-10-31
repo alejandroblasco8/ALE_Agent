@@ -53,5 +53,8 @@ DEF rLCDC = $FF40
 DEF rOBP0 = $FF48
 DEF VRAM_START_ADDR = $9800
 
+;;SCENES CONSTANTS
+DEF N_MAPS = 5
+
 ;; Exit tile number
 DEF exit = $05

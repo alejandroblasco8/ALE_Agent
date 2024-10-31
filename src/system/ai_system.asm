@@ -389,13 +389,13 @@ reset_projectile::
     jr z, .h_l
 
     cp H_R_CODE
-    jr z, .x
+    jr z, .h_r
 
     cp V_D_CODE
-    jr z, .x
+    jr z, .v_d
 
     cp V_U_CODE
-    jr z, .x
+    jr z, .v_u
 
     .h_l
 

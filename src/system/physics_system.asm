@@ -326,9 +326,7 @@ check_goal_entry::
     ld a,0
     call entityman_get_by_index
 
-    ld a, 28
-    ld [hl+], a
-    ld [hl], 20
+    call next_level
     
     xor a
     ret
