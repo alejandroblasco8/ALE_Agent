@@ -5,6 +5,7 @@ SECTION "Scenes WRAM", WRAM0
 CurrentLevel:
     Ds 1 ; Variable para el nivel actual
 
+
 SECTION "Scenes", ROM0
 
 player1: db 28, 20, $04, 0, 7, 8
@@ -15,7 +16,14 @@ notas:
     Db $00, $02  ; Nota 2
     Db $70, $01  ; Nota 3
     Db $00, $02  ; Nota 4
+    Db $20, $30  ; Nota 4
+    Db $20, $30  ; Nota 4
+    Db $60, $13  ; Nota 4
+MusicDelay:
+    DB 30
 
+CurrentNote:
+    DB 0
 
 ;; ############################################################################
 ;; Detects if some button is pressed
@@ -116,7 +124,6 @@ scenes_startscreen::
 ;; 
 ;; MODIfIES: DE, BC, AF, HL
 ;; ############################################################################
-
 change_map:
 
 
@@ -239,7 +246,7 @@ next_level:
         ret
 
 ;; ############################################################################
-;; Detects if some button is pressed with a melody
+;; Initiates de sound
 ;;
 ;; INPUT: None
 ;;
@@ -247,65 +254,101 @@ next_level:
 ;; 
 ;; MODIfIES: AF, HL, C
 ;; ############################################################################
-_wait_button_with_sound:
-; Inicialización del sistema de sonido
-    ld hl, $ff10
-    ld b, $14   ; Número de registros de sonido para inicializar
+init_sound:
+    ; Inicialización del sistema de sonido
+    ; Desactivar todos los canales primero
+    LD A, $00
+    LDh [$25], A  ; NR52 - apaga el sonido
 
-    init_sound:
-        ld [hl], $00
-        INc hl
-        dec b
-        jr nz, init_sound
+    ; Limpiar registros de sonido
+    LD HL, $ff10
+    LD B, $14   ; Desde $FF10 a $FF23
 
-    ; configurar los registros NR50, NR51 y NR52 para activar el sonido
-    ld a, $77
-    ld [$ff24], a  ; NR50, configuración de volumen y panorámica
-    ld [$ff25], a  ; NR51, selección de canales
-    ld a, $80
-    ld [$ff26], a  ; NR52, activar el sistema de sonido
+    clear_sound:
+        LD [HL], $00
+        inc hl
+        DEC B
+        JR NZ, clear_sound
 
-; configurar el canal 2 para una onda cuadrada
-    ld a, $81   ; NR21, ciclo de trabajo 50% y longitud de sonido
-    ld [$ff16], a
-    ld a, $f3   ; NR22, volumen máximo sin cambio automático de volumen
-    ld [$ff17], a
-    ld a, $00   ; Parte baja del período (NR23)
-    ld [$ff18], a
-    ld a, $c3   ; NR24, iniciar el sonido con temporizador activo y parte alta del período
-    ld [$ff19], a
+    ; Configurar los registros globales de sonido
+    LD A, $77
+    LDh [$24], A  ; NR50, configuración de volumen
+    ld a, $80    ; se pone en $11 cuando queramos sonido
+    LDh [$26], A  ; NR51, encaminamiento del sonido
+
+    ; Configurar el Canal 2 para una onda cuadrada
+    LD A, $C1;$80   ; NR21, ciclo de trabajo 50% (10 en los bits 7 y 6), longitud máxima
+    LDh [$16], A
+    LD A, $f9;$80   ; NR22, volumen máximo inicial, volumen no decreciente
+    LDh [$17], A
+
+    LD A, $ff
+    LDh [$25], A  ; NR52, reactiva el sonido
+
+    ret
+
+
+;; ############################################################################
+;; Initiates de sound
+;;
+;; INPUT: None
+;;
+;; OUTPUT: None
+;; 
+;; MODIfIES: AF, HL, BC, DE
+;; ############################################################################
+next_note:
+    ld hl, MusicDelay
+    ld a, [hl]
+    dec a
+    jr z, .reset_delay
+
+    ld hl, CurrentNote
+    ld c, [hl]     ; Número de nota
+    ld b, $00
+
+    ; Calculamos la nota actual
+    ld de, notas
+    ld a, e
+    add c
+    ld e, a
+    ld a, d
+    adc b
+    ld d, a
+
+    push hl
+
+    inc c
+    ld a, c
+    cp 4; numero total de notas
+    jr z, .reset_song
+
+    .continue:
+    pop hl
+
+    ; Guardamos en memoria cual seria la siguiente nota
+    ld [hl], c
+
+    ld h, d
+    ld l, e
+
+    LD A, [HLI]  ; Cargar parte baja del período (NR23)
+    LDh [$18], A
+    LD A, [HLI]  ; Cargar parte alta del período y banderas de control (NR24)
+    or %10000000 ; asegurar que el bit 7 esté en alto para activar el canal
+    LDh [$19], A
+    ret
 
     ; bucle para reproducir una secuencia de notas
-    emepezar_de_nuevo:
+    .reset_delay:
+        ld a, 200 ;Music delay
+        ld [hl], a
+        ret
+
+    .reset_song
         ld hl, notas
         ld c, 4     ; Número de notas a reproducir
-
-    play_loop:
-
-        ldh a, [$00]
-        and %00000100 ;UP pressed
-        jr z, .pressed_up
-
-        ld a, [hli] ; cargar la próxima parte baja del período
-        ld [$ff18], a   ; Establecer la nueva frecuencia (parte baja)
-        ld a, [hli] ; cargar parte alta de la frecuencia y control
-        or %10000000 ; asegurar que el bit 7 esté en alto para activar el canal
-        ld [$ff19], a   ; Iniciar la nota
-        call Delay    ; Retardo para mantener la nota sonando
-        dec c
-        jr nz, play_loop
-        jp emepezar_de_nuevo
-
-        .pressed_up
-            ret
-
-    ; función de retardo
-    Delay:
-        ld b, 20   ; Duración del retardo
-    delay_loop:
-        dec b
-        jr nz, delay_loop
-        RET
+        jp .continue
 
 game_over:
     ret

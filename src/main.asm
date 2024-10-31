@@ -23,12 +23,15 @@ SECTION "Entry point", ROM0[$250]
 
 
 main::
-
 	call scenes_startscreen
 
 	call next_level
 
+    call init_sound
+
     .loop
+        call next_note
+
         ; No need for wait for vblank
         ld de, _copy_entity_to_OAM
         ld hl, _entities_array
