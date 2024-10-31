@@ -68,68 +68,6 @@ get_y_x_coords_from_vram:
     ret
 
 get_vram_tile_from_y_x_coords::
-; HL => VRAM
-; OUT => BC (YX)
-get_y_x_coords_from_vram:
-    ld de, VRAM_START_ADDR
-
-    ld a, l
-    sub e
-    ld l, a
-
-    ld a, h
-    sbc d
-    ld h, a
-
-    ld de, 32
-    ld b, 0
-
-    .loop_32
-        ld a, l
-        sub e
-        ld l, a
-
-        ld a, h
-        sbc d
-        ld h, a
-
-        inc b
-
-        cp 0
-        jr nz, .loop_32
-
-        ld a, l
-        cp 32
-        jr nc, .loop_32
-
-    ld a, b
-
-    sla a
-    sla a
-    sla a
-
-    ld b, OAM_Y_DISPLACEMENT
-    add b
-
-    ; Save Y Coord
-    ld b, a
-
-    ; Set X Coord
-    ld a, l
-
-    sla a
-    sla a
-    sla a
-
-    ld d, OAM_X_DISPLACEMENT - 8
-    add d
-
-    ; Save X Coord
-    ld c, a
-
-    ret
-
-get_vram_tile_from_y_x_coords::
 
 ;; ############################################################################
 ;; Update the entity position
@@ -467,22 +405,7 @@ check_collisions_enemy_solid::
 
     .loop:
         ld bc, ENTITY_SIZE
-        ld bc, ENTITY_SIZE
         add hl, bc
-        push hl
-
-        ld a, [hl+]
-
-        ; Load collision coordinate
-        ld b, [hl]
-
-        ; Move to X coord
-        dec hl
-        dec hl
-        dec hl
-        dec hl
-
-        cp H_L_SHOOTER
         push hl
 
         ld a, [hl+]
@@ -500,25 +423,15 @@ check_collisions_enemy_solid::
         jr z, .check_h_l
 
         cp H_R_SHOOTER
-        cp H_R_SHOOTER
         jr z, .check_h_r
 
-        cp V_D_SHOOTER
         cp V_D_SHOOTER
         jr z, .check_v_d
 
         cp V_U_SHOOTER
-        cp V_U_SHOOTER
         jr z, .check_v_u
 
         .check_h_l:
-            ; Get current coord
-            ld a, [hl]
-            cp b
-            jr nc, .next_enemy
-
-            ld a, H_L_SHOOTER
-            call reset_projectile
             ; Get current coord
             ld a, [hl]
             cp b
@@ -537,16 +450,8 @@ check_collisions_enemy_solid::
 
              ld a, H_R_SHOOTER
              call reset_projectile
-             ; Get current coord
-             ld a, [hl]
-             cp b
-             jr c, .next_enemy
-
-             ld a, H_R_SHOOTER
-             call reset_projectile
 
             jr .next_enemy
-
 
         .check_v_d:
 
@@ -559,18 +464,8 @@ check_collisions_enemy_solid::
 
             ld a, V_D_SHOOTER
             call reset_projectile
-            dec hl
-
-            ; get current coord
-            ld a, [hl]
-            cp b
-            jr c, .next_enemy
-
-            ld a, V_D_SHOOTER
-            call reset_projectile
 
             jr .next_enemy
-
 
         .check_v_u:
 
@@ -584,20 +479,7 @@ check_collisions_enemy_solid::
             ld a, V_U_SHOOTER
             call reset_projectile
 
-
-            dec hl
-
-            ; get current coord
-            ld a, [hl]
-            cp b
-            jr nc, .next_enemy
-
-            ld a, V_U_SHOOTER
-            call reset_projectile
-
         .next_enemy:
-            pop hl
-
             pop hl
 
             dec e
