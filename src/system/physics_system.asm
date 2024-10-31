@@ -335,7 +335,7 @@ check_goal_entry::
 
 check_enemy_solid_collisions::
 
-    ld hl, _entities_array + ENTITY_SIZE - 2
+    ld hl, _entities_array + ENTITY_SIZE - 3
     ld bc, ENTITY_SIZE
 
     ld a, [_num_entities]
@@ -349,16 +349,18 @@ check_enemy_solid_collisions::
         add hl, bc
         ld a, [hl]
 
-        cp H_L_CODE
+        push hl
+
+        cp H_L_SHOOTER
         jr z, .check_h_l
 
-        cp H_R_CODE
+        cp H_R_SHOOTER
         jr z, .check_h_r
 
-        cp V_D_CODE
+        cp V_D_SHOOTER
         jr z, .check_v_d
 
-        cp V_U_CODE
+        cp V_U_SHOOTER
         jr z, .check_v_u
 
         .check_h_l:
@@ -378,12 +380,6 @@ check_enemy_solid_collisions::
             pop de
             pop hl
 
-            ld a, 3
-            add l
-            ld l, a
-            ld a, 0
-            adc h
-            ld h, a
 
             jr .next_enemy
 
@@ -403,13 +399,6 @@ check_enemy_solid_collisions::
             pop de
             pop hl
 
-            ld a, 3
-            add l
-            ld l, a
-            ld a, 0
-            adc h
-            ld h, a
-
             jr .next_enemy
         .check_v_d:
 
@@ -428,13 +417,6 @@ check_enemy_solid_collisions::
             pop de
             pop hl
 
-            ld a, 4
-            add l
-            ld l, a
-            ld a, 0
-            adc h
-            ld h, a
-
             jr .next_enemy
         .check_v_u:
             ld a, l
@@ -447,21 +429,16 @@ check_enemy_solid_collisions::
             push hl
             push de
             push bc
-            call check_tile_v_d
+            call check_tile_v_u
             pop bc
             pop de
             pop hl
 
-            ld a, 4
-            add l
-            ld l, a
-            ld a, 0
-            adc h
-            ld h, a
-
             jr .next_enemy
         
         .next_enemy:
+            pop hl
+
             dec e
             ret z
             jp .loop
@@ -498,7 +475,7 @@ check_tile_h_l::
     call check_collisions_enemy_block
     pop hl
     jr nz, .no_reset_h_l
-        ld a, H_L_CODE
+        ld a, H_L_SHOOTER
         call reset_projectile
     .no_reset_h_l
     ret
@@ -534,7 +511,7 @@ check_tile_h_r::
     call check_collisions_enemy_block
     pop hl
     jr nz, .no_reset_h_r
-        ld a, H_R_CODE
+        ld a, H_R_SHOOTER
         call reset_projectile
     .no_reset_h_r
 
@@ -572,7 +549,7 @@ check_tile_v_u::
     call check_collisions_enemy_block
     pop hl
     jr nz, .no_reset_v_u
-        ld a, V_U_CODE
+        ld a, V_U_SHOOTER
         call reset_projectile
     .no_reset_v_u
 
@@ -611,7 +588,7 @@ check_tile_v_d::
     call check_collisions_enemy_block
     pop hl
     jr nz, .no_reset_v_d
-        ld a, V_D_CODE
+        ld a, V_D_SHOOTER
         call reset_projectile
     .no_reset_v_d
 
