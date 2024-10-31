@@ -6,6 +6,68 @@ _UP_DOWN: ds 4
 
 SECTION "Physics system", ROM0
 
+; HL => VRAM
+; OUT => BC (YX)
+get_y_x_coords_from_vram:
+    ld de, VRAM_START_ADDR
+
+    ld a, l
+    sub e
+    ld l, a
+
+    ld a, h
+    sbc d
+    ld h, a
+
+    ld de, 32
+    ld b, 0
+
+    .loop_32
+        ld a, l
+        sub e
+        ld l, a
+
+        ld a, h
+        sbc d
+        ld h, a
+
+        inc b
+
+        cp 0
+        jr nz, .loop_32
+
+        ld a, l
+        cp 32
+        jr nc, .loop_32
+
+    ld a, b
+
+    sla a
+    sla a
+    sla a
+
+    ld b, OAM_Y_DISPLACEMENT
+    add b
+
+    ; Save Y Coord
+    ld b, a
+
+    ; Set X Coord
+    ld a, l
+
+    sla a
+    sla a
+    sla a
+
+    ld d, OAM_X_DISPLACEMENT - 8
+    add d
+
+    ; Save X Coord
+    ld c, a
+
+    ret
+
+get_vram_tile_from_y_x_coords::
 
 ;; ############################################################################
 ;; Update the entity position
@@ -334,134 +396,92 @@ check_goal_entry::
     
 
 check_enemy_solid_collisions::
-
-    ld hl, _entities_array + ENTITY_SIZE - 2
-    ld bc, ENTITY_SIZE
+    ld hl, _entities_array + ENTITY_SIZE - 3
 
     ld a, [_num_entities]
     dec a
     cp 0
     ret z
 
-    ld e, a
-
     .loop:
+        ld bc, ENTITY_SIZE
         add hl, bc
-        ld a, [hl]
+        push hl
 
-        cp H_L_CODE
+        ld a, [hl+]
+
+        ; Load collision coordinate
+        ld b, [hl]
+
+        ; Move to X coord
+        dec hl
+        dec hl
+        dec hl
+        dec hl
+
+        cp H_L_SHOOTER
         jr z, .check_h_l
 
-        cp H_R_CODE
+        cp H_R_SHOOTER
         jr z, .check_h_r
 
-        cp V_D_CODE
+        cp V_D_SHOOTER
         jr z, .check_v_d
 
-        cp V_U_CODE
+        cp V_U_SHOOTER
         jr z, .check_v_u
 
         .check_h_l:
+            ; Get current coord
+            ld a, [hl]
+            cp b
+            jr nc, .next_enemy
 
-            ld a, l
-            sub 3
-            ld l, a
-            ld a, [hl-] ;;X
-            ld d, a
-            ld a, [hl+] ;;Y
-
-            push hl
-            push de
-            push bc
-            call check_tile_h_l
-            pop bc
-            pop de
-            pop hl
-
-            ld a, 3
-            add l
-            ld l, a
-            ld a, 0
-            adc h
-            ld h, a
+            ld a, H_L_SHOOTER
+            call reset_projectile
 
             jr .next_enemy
 
         .check_h_r:
-            ld a, l
-            sub 3
-            ld l, a
-            ld a, [hl-] ;;X
-            ld d, a
-            ld a, [hl+] ;;Y
+             ; Get current coord
+             ld a, [hl]
+             cp b
+             jr c, .next_enemy
 
-            push hl
-            push de
-            push bc
-            call check_tile_h_r
-            pop bc
-            pop de
-            pop hl
-
-            ld a, 3
-            add l
-            ld l, a
-            ld a, 0
-            adc h
-            ld h, a
+             ld a, H_R_SHOOTER
+             call reset_projectile
 
             jr .next_enemy
+
         .check_v_d:
 
-            ld a, l
-            sub 4
-            ld l, a
-            ld a, [hl+] ;;Y
-            ld d, a
-            ld a, [hl-] ;;X
+            dec hl
 
-            push hl
-            push de
-            push bc
-            call check_tile_v_d
-            pop bc
-            pop de
-            pop hl
+            ; get current coord
+            ld a, [hl]
+            cp b
+            jr c, .next_enemy
 
-            ld a, 4
-            add l
-            ld l, a
-            ld a, 0
-            adc h
-            ld h, a
+            ld a, V_D_SHOOTER
+            call reset_projectile
 
             jr .next_enemy
+
         .check_v_u:
-            ld a, l
-            sub 4
-            ld l, a
-            ld a, [hl+] ;;Y
-            ld d, a
-            ld a, [hl-] ;;X
 
-            push hl
-            push de
-            push bc
-            call check_tile_v_d
-            pop bc
-            pop de
+            dec hl
+
+            ; get current coord
+            ld a, [hl]
+            cp b
+            jr nc, .next_enemy
+
+            ld a, V_U_SHOOTER
+            call reset_projectile
+
+        .next_enemy:
             pop hl
 
-            ld a, 4
-            add l
-            ld l, a
-            ld a, 0
-            adc h
-            ld h, a
-
-            jr .next_enemy
-        
-        .next_enemy:
             dec e
             ret z
             jp .loop
@@ -498,7 +518,7 @@ check_tile_h_l::
     call check_collisions_enemy_block
     pop hl
     jr nz, .no_reset_h_l
-        ld a, H_L_CODE
+        ld a, H_L_SHOOTER
         call reset_projectile
     .no_reset_h_l
     ret
@@ -534,7 +554,7 @@ check_tile_h_r::
     call check_collisions_enemy_block
     pop hl
     jr nz, .no_reset_h_r
-        ld a, H_R_CODE
+        ld a, H_R_SHOOTER
         call reset_projectile
     .no_reset_h_r
 
@@ -572,7 +592,7 @@ check_tile_v_u::
     call check_collisions_enemy_block
     pop hl
     jr nz, .no_reset_v_u
-        ld a, V_U_CODE
+        ld a, V_U_SHOOTER
         call reset_projectile
     .no_reset_v_u
 
@@ -611,7 +631,7 @@ check_tile_v_d::
     call check_collisions_enemy_block
     pop hl
     jr nz, .no_reset_v_d
-        ld a, V_D_CODE
+        ld a, V_D_SHOOTER
         call reset_projectile
     .no_reset_v_d
 

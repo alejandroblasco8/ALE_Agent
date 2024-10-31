@@ -30,21 +30,21 @@ main::
 
     .loop
         ; No need for wait for vblank
+        call aisys_enemies_shoot
+        call check_player_enemy_collisions
+		call check_enemy_solid_collisions
+
+        call _wait_vblank_start
+        call physys_move_player
+
         ld de, _copy_entity_to_OAM
         ld hl, _entities_array
         ld bc, OAM_START_ADDR
 
         call _wait_vblank_start
         call entityman_for_each
-        call physys_move_player
 
-        ; No need for wait for vblank
-		
-        call aisys_enemies_shoot
-        call check_player_enemy_collisions
-		call _wait_vblank_start
-		call check_enemy_solid_collisions
-		
+
     jp .loop
 
 	call game_over
