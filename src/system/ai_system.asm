@@ -2,20 +2,69 @@ include "constants.asm"
 
 SECTION "AI SYSTEM", ROM0
 
-_projectile: db $00, $00, $00, 0, 0, 0
+_projectile: db $00, $00, $00, 0, 0, 0, 0
 
-aisys_init_enemies2:
-    ld b, (MAX_ENTITIES - 1)
+; HL => VRAM
+; OUT => BC (YX)
+_get_y_x_coords_from_vram:
+    ld de, $9800
 
-    .loop1:
-        ld hl, _projectile
+    ld a, l
+    sub e
+    ld l, a
 
-        push bc
-        call entityman_create
-        pop bc
+    ld a, h
+    sbc d
+    ld h, a
 
-        dec b
-        jr nz, .loop1
+    ld de, 32
+    ld b, 0
+
+    .loop_32
+        ld a, l
+        sub e
+        ld l, a
+
+        ld a, h
+        sbc d
+        ld h, a
+
+        inc b
+
+        cp 0
+        jr nz, .loop_32
+
+        ld a, l
+        cp 32
+        jr nc, .loop_32
+
+    ld a, b
+
+    sla a
+    sla a
+    sla a
+
+    ld b, OAM_Y_DISPLACEMENT
+    add b
+
+    ; Save Y Coord
+    ld b, a
+
+    ; Set X Coord
+    ld a, l
+
+    sla a
+    sla a
+    sla a
+
+    ld d, OAM_X_DISPLACEMENT - 8
+    add d
+
+    ; Save X Coord
+    ld c, a
+
+    ret
+
 
 aisys_init_enemies:
     ld hl, VRAM_START_ADDR
@@ -39,37 +88,24 @@ aisys_init_enemies:
         ; Check if left horizontal shooter
         ld a, H_L_SHOOTER
         cp d
-
-        ; Save result and jump to found
-        ld e, H_L_CODE
         jr z, .enemy_found
 
         ; Check if right horizontal shooter
         ld a, H_R_SHOOTER
         cp d
-
-        ; Save result and jump to found
-        ld a, H_R_CODE
         jr z, .enemy_found
 
         ; Check if vertical down shooter
         ld a, V_D_SHOOTER
         cp d
-
-        ; Save result and jump to found
-        ld a, V_D_CODE
         jr z, .enemy_found
 
         ; Check if vertical up shooter
         ld a, V_U_SHOOTER
         cp d
-
-        ; Save result and jump to found
-        ld a, V_U_CODE
         jp nz, .enemy_not_found
 
         .enemy_found
-
 
         pop de
         inc d
@@ -86,7 +122,7 @@ aisys_init_enemies:
 
         push de
 
-        ld de, $9800
+        ld de, VRAM_START_ADDR
 
         ld a, l
         sub e
@@ -150,7 +186,7 @@ aisys_init_enemies:
             dec d
             jr nz, .entity_array_pos_loop
 
-
+        ; Set Y Coord
         ld [hl+], a
 
         ; Save VRAM pointer
@@ -174,26 +210,70 @@ aisys_init_enemies:
         ld h, b
         ld l, c
 
-        ld [hl+], a
+        ; Set X coord
+        ld [hl], a
 
         ; Retrieve entity type
         pop af
+
         ld e, a
 
+        cp H_L_SHOOTER
+        jr z, .x_collision_attr
+        cp H_R_SHOOTER
+        jr z, .x_collision_attr
+
+        jr .y_collision_attr
+
+        .x_collision_attr:
+        ld a, [hl+]
+
+        inc hl
+        inc hl
+        inc hl
+        inc hl
+
+        ; Set start X coord
+        ld [hl], a
+
+        jr .skip_y
+
+        .y_collision_attr:
+        dec hl
+        ld a, [hl+]
+
+        inc hl
+        inc hl
+        inc hl
+        inc hl
+        inc hl
+
+        ld [hl], a
+
+        .skip_y:
+
+        ; Restore VRAM pointer
+        ld h, b
+        ld l, c
+        inc hl
+
+        ; Restore type of gun
+        ld a, e
+
         ; Jump to horizonal left
-        cp H_L_CODE
+        cp H_L_SHOOTER
         jr z, .h_l
 
         ; Jump to horizontal right
-        cp H_R_CODE
+        cp H_R_SHOOTER
         jr z, .h_r
 
         ; Jump to vertical down
-        cp V_D_CODE
+        cp V_D_SHOOTER
         jr z, .v_d
 
         ; Jump to vertical up
-        cp V_U_CODE
+        cp V_U_SHOOTER
         jr z, .v_u
 
         .h_l
@@ -228,9 +308,27 @@ aisys_init_enemies:
         ld a, e
         ld [hl+], a
 
-        ; Set steps done
-        ld a, 0
-        ld [hl], a
+        ; Save WRAM pointer
+        ld d, h
+        ld e, l
+
+        ; Retrieve VRAM pointer
+        pop hl
+
+        ; Save VRAM pointer
+        push hl
+
+        ; Set tile collision
+        push de
+        call _get_colission_tile
+        pop de
+
+        ; Restore WRAM pointer
+        ld h, d
+        ld l, e
+
+        ; Set collision tile
+        ld [hl+], a
 
         ; Retrieve VRAM pointer
         pop hl
@@ -254,8 +352,96 @@ aisys_init_enemies:
     pop de
     ret
 
+; a => direction
+; hl => initial tile address
+; out => hl colission tile address
+_get_colission_tile:
+    ; Jump to horizonal left
+    cp H_L_SHOOTER
+    jr z, .h_l
+
+    ; Jump to horizontal right
+    cp H_R_SHOOTER
+    jr z, .h_r
+
+    ; Jump to vertical down
+    cp V_D_SHOOTER
+    jr z, .v_d
+
+    ; Jump to vertical up
+    cp V_U_SHOOTER
+    jr z, .v_u
+
+    .h_l
+
+    dec hl
+
+    .loop_h_l:
+        ld a, [hl-]
+        push hl
+        call check_collisions_enemy_block
+        pop hl
+        jr nz, .loop_h_l
+
+    ret
+
+    .h_r
+
+    inc hl
+
+    .loop_h_r:
+        ld a, [hl+]
+        push hl
+        call check_collisions_enemy_block
+        pop hl
+        jr nz, .loop_h_r
+
+    ret
+
+    .v_d
+
+    dec hl
+    ld de, $20
+
+    .loop_v_d:
+        add hl, de
+        ld a, [hl]
+
+        push hl
+        push de
+        call check_collisions_enemy_block
+        pop de
+        pop hl
+        jr nz, .loop_v_d
+
+    ret
+
+    .v_u
+
+    dec hl
+    ld de, $20
+
+    .loop_v_u:
+        ld a, h
+        sub d
+        ld h, a
+        ld a, l
+        sbc e
+        ld l, a
+
+        ld a, [hl]
+        push hl
+        push de
+        call check_collisions_enemy_block
+        pop de
+        pop hl
+        jr nz, .loop_v_u
+
+    ret
+
+
 aisys_enemies_shoot::
-    ld hl, _entities_array + ENTITY_SIZE - 2
+    ld hl, _entities_array + ENTITY_SIZE - 3
     ld de, ENTITY_SIZE
 
     ld a, [_num_entities]
@@ -269,43 +455,45 @@ aisys_enemies_shoot::
         add hl, de
         ld a, [hl]
 
-        cp H_L_CODE
+        push hl
+
+        cp H_L_SHOOTER
         jr z, .h_l
 
-        cp H_R_CODE
+        cp H_R_SHOOTER
         jr z, .h_r
 
-        cp V_D_CODE
+        cp V_D_SHOOTER
         jr z, .v_d
 
-        cp V_U_CODE
+        cp V_U_SHOOTER
         jr z, .v_u
 
         .h_l:
 
-        inc hl
-        inc [hl]
-
         ld a, l
-        sub 4
+        sub 3
         ld l, a
 
         ld a, [hl]
         sub PROJECTILE_SPEED
         ld [hl], a
-        ld a, 3
-        add l
-        ld l, a
-        ld a, 0
-        adc h
-        ld h, a
 
         jr .next_projectile
 
         .h_r:
 
-        inc hl
-        inc [hl]
+        ld a, l
+        sub 3
+        ld l, a
+
+        ld a, [hl]
+        add PROJECTILE_SPEED
+        ld [hl], a
+
+        jr .next_projectile
+
+        .v_d:
 
         ld a, l
         sub 4
@@ -315,59 +503,20 @@ aisys_enemies_shoot::
         add PROJECTILE_SPEED
         ld [hl], a
 
-        ld a, 3
-        add l
-        ld l, a
-        ld a, 0
-        adc h
-        ld h, a
-
-        jr .next_projectile
-
-        .v_d:
-
-        inc hl
-        inc [hl]
-
-        ld a, l
-        sub 5
-        ld l, a
-
-        ld a, [hl]
-        add PROJECTILE_SPEED
-        ld [hl], a
-
-        .no_collision_v_d
-        ld a, 4
-        add l
-        ld l, a
-        ld a, 0
-        adc h
-        ld h, a
-
         jr .next_projectile
 
         .v_u:
 
-        inc hl
-        inc [hl]
-
         ld a, l
-        sub 5
+        sub 4
         ld l, a
 
         ld a, [hl]
         sub PROJECTILE_SPEED
         ld [hl], a
 
-        ld a, 4
-        add l
-        ld l, a
-        ld a, 0
-        adc h
-        ld h, a
-
         .next_projectile:
+        pop hl
 
         dec c
         ret z
@@ -385,38 +534,36 @@ reset_projectile::
     ld c, l
 
     ; Jump to specific type of entity code
-    cp H_L_CODE
+    cp H_L_SHOOTER
     jr z, .h_l
 
-    cp H_R_CODE
-    jr z, .x
+    cp H_R_SHOOTER
+    jr z, .h_r
 
-    cp V_D_CODE
-    jr z, .x
+    cp V_D_SHOOTER
+    jr z, .v_d
 
-    cp V_U_CODE
-    jr z, .x
+    cp V_U_SHOOTER
+    jr z, .v_u
 
     .h_l
 
     ; Move to steps done propierty
-    ld de, 4
+    ld de, 5
     add hl, de
 
-    ; Retrieve steps done
-    ld e, [hl]
-
-    ; Reset steps done
-    xor a
-    ld [hl], a
+    ; Retrieve initial X coordinate
+    ld a, [hl]
 
     ; Reset pointer
     ld h, b
     ld l, c
 
-    ; Reset position
-    ld a, [hl]
-    add e
+    ; Separate bullet from gun
+    ld b, 8
+    sub b
+
+    ; Reset X to initial position
     ld [hl], a
 
     ret
@@ -424,23 +571,21 @@ reset_projectile::
     .h_r
 
     ; Move to steps done propierty
-    ld de, 4
+    ld de, 5
     add hl, de
 
-    ; Retrieve steps done
-    ld e, [hl]
-
-    ; Reset steps done
-    xor a
-    ld [hl], a
+    ; Retrieve initial X coordinate
+    ld a, [hl]
 
     ; Reset pointer
     ld h, b
     ld l, c
 
-    ; Reset position
-    ld a, [hl]
-    sub e
+    ; Separate bullet from gun
+    ld b, 8
+    add b
+
+    ; Reset X to initial position
     ld [hl], a
 
     ret
@@ -448,46 +593,43 @@ reset_projectile::
     .v_d
 
     ; Move to steps done propierty
-    ld de, 5
+    ld de, 6
     add hl, de
 
-    ; Retrieve steps done
-    ld e, [hl]
-
-    ; Reset steps done
-    xor a
-    ld [hl], a
+    ; Retrieve initial Y coordinate
+    ld a, [hl]
 
     ; Reset pointer
     ld h, b
     ld l, c
 
-    ; Reset position
-    ld a, [hl]
-    sub e
+    ; Separate bullet from gun
+    ld b, 8
+    add b
+
+    ; Reset Y to initial position
     ld [hl], a
 
+    ret
 
     .v_u
 
     ; Move to steps done propierty
-    ld de, 5
+    ld de, 6
     add hl, de
 
-    ; Retrieve steps done
-    ld e, [hl]
-
-    ; Reset steps done
-    xor a
-    ld [hl], a
+    ; Retrieve initial Y coordinate
+    ld a, [hl]
 
     ; Reset pointer
     ld h, b
     ld l, c
 
-    ; Reset position
-    ld a, [hl]
-    add e
+    ; Separate bullet from gun
+    ld b, 8
+    sub b
+
+    ; Reset Y to initial position
     ld [hl], a
 
     ret

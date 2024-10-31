@@ -19,7 +19,7 @@ include "constants.asm"
 SECTION "Entry point", ROM0[$250]
 
 
-player1: db 28, 20, $04, 0, 7, 8
+player1: db 28, 20, $04, 0, 7, 8, 0
 
 
 main::
@@ -78,7 +78,6 @@ main::
 		dec b
 		jr nz, .row_loop1
 
-
 	call end_drawing
 
 	call _wait_button
@@ -90,7 +89,7 @@ main::
 		ld hl, $9800
 
 		; Set the tile number we want to use
-		ld de, Map04
+		ld de, Map07
 
 		; Set counter for number of rows
 		ld b, 18
@@ -142,22 +141,20 @@ main::
 
     .loop
         ; No need for wait for vblank
+        call aisys_enemies_shoot
+        call check_player_enemy_collisions
+
+		call _wait_vblank_start
+		call check_enemy_solid_collisions
+
         ld de, _copy_entity_to_OAM
         ld hl, _entities_array
         ld bc, OAM_START_ADDR
 
         call _wait_vblank_start
-
         call entityman_for_each
         call physys_move_player
 
-        ; No need for wait for vblank
-		
-        call aisys_enemies_shoot
-        call check_player_enemy_collisions
-		call _wait_vblank_start
-		call check_enemy_solid_collisions
-		
     jp .loop
 
 	call game_over
