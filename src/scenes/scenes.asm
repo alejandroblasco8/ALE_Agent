@@ -262,6 +262,10 @@ next_level:
         call aisys_init_enemies
 
         call end_drawing
+        call _wait_button
+        ld a, 2
+        ld [CurrentLevel], a
+        call next_level
         ret
 
 ;; ############################################################################

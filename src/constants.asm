@@ -54,7 +54,7 @@ DEF rOBP0 = $FF48
 DEF VRAM_START_ADDR = $9800
 
 ;;SCENES CONSTANTS
-DEF N_MAPS = 11
+DEF N_MAPS = 11 ;;levels size - 1
 
 ;; Exit tile number
 DEF exit = $05
