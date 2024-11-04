@@ -135,6 +135,9 @@ physys_move_player::
     ld b, a
     ld a, [hl]
     ld c, a
+
+    ld a, %11101111
+    ld [$FF00], a
     
     ldh a, [$00]
 
@@ -148,8 +151,6 @@ physys_move_player::
     ld [hl+], a
     ld a, c
     ld [hl], a
-
-
 
     ret
 

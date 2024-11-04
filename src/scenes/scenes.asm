@@ -29,6 +29,9 @@ notas:
 
 _wait_button:
 
+    ld a, %11011111
+    ld [$FF00], a
+
     .loop:
         call aisys_enemies_shoot
 		call check_collisions_enemy_solid
@@ -41,7 +44,7 @@ _wait_button:
         call entityman_for_each
 
         ldh a, [$00]
-        and %00000100 ;UP pressed
+        and %00001000 ;UP pressed
         jr z, .pressed
     jp .loop
     
