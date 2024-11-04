@@ -268,6 +268,7 @@ next_level:
         call _wait_button
         ld a, 2
         ld [CurrentLevel], a
+        call physys_init_deaths_counter
         call next_level
         ret
 

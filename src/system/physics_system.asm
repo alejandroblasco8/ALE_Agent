@@ -3,8 +3,14 @@ include "constants.asm"
 SECTION "Physics system locations", WRAM0
 
 _UP_DOWN: ds 4
+DEATHS_COUNTER: ds 1
 
 SECTION "Physics system", ROM0
+
+physys_init_deaths_counter::
+    xor a
+    ld [DEATHS_COUNTER], a
+    ret
 
 ; HL => VRAM
 ; OUT => BC (YX)
@@ -374,6 +380,11 @@ check_collisions_player_enemy::
         ld a, 28
         ld [hl+], a
         ld [hl], 20
+
+        ld a, [DEATHS_COUNTER]
+        inc a
+        daa
+        ld [DEATHS_COUNTER], a
         
         xor a
         ret
