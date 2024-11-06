@@ -20,9 +20,9 @@ SECTION "Entry point", ROM0[$250]
 
 main::
 
-    call physys_init_deaths_counter
 	call scenes_startscreen
 	call next_level
+    call physys_init_deaths_counter
 
     .loop
     

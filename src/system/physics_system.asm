@@ -3,13 +3,14 @@ include "constants.asm"
 SECTION "Physics system locations", WRAM0
 
 _UP_DOWN: ds 4
-DEATHS_COUNTER: ds 1
+DEATHS_COUNTER: ds 2
 
 SECTION "Physics system", ROM0
 
 physys_init_deaths_counter::
     xor a
     ld [DEATHS_COUNTER], a
+    ld [DEATHS_COUNTER + 1], a
     ret
 
 ; HL => VRAM
@@ -381,11 +382,36 @@ check_collisions_player_enemy::
         ld [hl+], a
         ld [hl], 20
 
+        ld a, [DEATHS_COUNTER + 1]
+        ld b, a
+        ld a, [DEATHS_COUNTER]
+        cp 9
+        jr nz, .is_lower_than_99
+        ld a, b
+        cp 9
+        jr nz, .is_lower_than_99
+        jp .reset_continue
+
+        .is_lower_than_99
+        xor a
+        ld a, [DEATHS_COUNTER + 1]
+        inc a
+        daa
+        cp $10
+        jr nz, .not_greater_than_10
+        xor a
+        ld [DEATHS_COUNTER + 1], a
+        xor a
         ld a, [DEATHS_COUNTER]
         inc a
         daa
         ld [DEATHS_COUNTER], a
-        
+        jp .reset_continue
+
+        .not_greater_than_10
+        ld [DEATHS_COUNTER + 1], a
+
+        .reset_continue
         xor a
         ret
     
@@ -450,7 +476,9 @@ check_collisions_enemy_solid::
             jr nc, .next_enemy
 
             ld a, H_L_SHOOTER
+            push de
             call reset_projectile
+            pop de
 
             jr .next_enemy
 
@@ -461,7 +489,9 @@ check_collisions_enemy_solid::
              jr c, .next_enemy
 
              ld a, H_R_SHOOTER
+             push de
              call reset_projectile
+             pop de
 
             jr .next_enemy
 
@@ -475,7 +505,9 @@ check_collisions_enemy_solid::
             jr c, .next_enemy
 
             ld a, V_D_SHOOTER
+            push de
             call reset_projectile
+            pop de
 
             jr .next_enemy
 
@@ -489,7 +521,9 @@ check_collisions_enemy_solid::
             jr nc, .next_enemy
 
             ld a, V_U_SHOOTER
+            push de
             call reset_projectile
+            pop de
 
         .next_enemy:
             pop hl
