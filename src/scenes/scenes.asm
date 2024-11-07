@@ -12,18 +12,20 @@ player1: db 28, 20, $04, 0, 7, 8
 
 ; Datos de notas, cada nota es dos bytes, baja y alta (NR23 y NR24)
 notas:
-    Db $70, $02  ; Nota 1
-    Db $00, $02  ; Nota 2
-    Db $70, $01  ; Nota 3
-    Db $00, $02  ; Nota 4
-    Db $20, $30  ; Nota 4
-    Db $20, $30  ; Nota 4
-    Db $60, $13  ; Nota 4
+    Db $0d, $85  ; Nota 1
+    Db $0d, $83  ; Nota 2
+    Db $0d, $85  ; Nota 1
+    Db $0d, $83  ; Nota 2
+    ;Db $70, $01  ; Nota 3
+    ;Db $00, $02  ; Nota 4
+    ;Db $20, $30  ; Nota 4
+    ;Db $20, $30  ; Nota 4
+    ;Db $60, $13  ; Nota 4
 MusicDelay:
-    DB 30
+    DB 5
 
 CurrentNote:
-    DB 0
+    Db 0
 
 ;; ############################################################################
 ;; Detects if some button is pressed
@@ -277,10 +279,28 @@ init_sound:
     LDh [$26], A  ; NR51, encaminamiento del sonido
 
     ; Configurar el Canal 2 para una onda cuadrada
-    LD A, $Cf   ; NR21
-    LDh [$16], A
-    LD A, $f9   ; NR22
-    LDh [$17], A
+    ;Db $70, $02  ; Nota 1
+    ;$cf, $f9  
+    ;LD A, $70   ; NR21
+    ;LDh [$16], A
+    ;LD A, $02   ; NR22
+    ;LDh [$17], A
+
+    
+
+    ld a, $80
+    ldh [$16], a
+    ld a, $70
+    ldh [$17], a
+
+    ; Initial Volume ; Env dir ; Sweep Space
+    ; 7 6 5 4          3    
+    ld a, $0d;%00001101 ;$0d
+    ;ldh [$18], a
+
+    ;con c3 se escucha poco, con a3 se escucha un sonido muy largo
+    ld a, $85;%11000011 ;$c3
+    ;ldh [$19], a
 
     LD A, $ff
     LDh [$25], A  ; NR52, reactiva el sonido
@@ -289,7 +309,7 @@ init_sound:
 
 
 ;; ############################################################################
-;; Initiates de sound
+;; Next note
 ;;
 ;; INPUT: None
 ;;
@@ -301,20 +321,18 @@ next_note:
     ld hl, MusicDelay
     ld a, [hl]
     dec a
-    jr z, .reset_delay
+    ret nz
+
+    ld a, 5
+    ld [hl], a
 
     ld hl, CurrentNote
     ld c, [hl]     ; Número de nota
     ld b, $00
 
+    
     ; Calculamos la nota actual
-    ld de, notas
-    ld a, e
-    add c
-    ld e, a
-    ld a, d
-    adc b
-    ld d, a
+    add hl, bc
 
     push hl
 
@@ -324,32 +342,42 @@ next_note:
     jr z, .reset_song
 
     .continue:
-    pop hl
 
     ; Guardamos en memoria cual seria la siguiente nota
+    ld hl, CurrentNote
     ld [hl], c
 
-    ld h, d
-    ld l, e
+    pop hl
 
+    ld a, $00
+    ldh [$25], A  ; NR52 - apaga el sonido
 
     LD A, [HL+]  ; Cargar parte alta del período y banderas de control (NR24)
+    LDh [$18], A
+    LD A, [HL+]  ; Cargar parte baja del período (NR23)
     or %10000000 ; asegurar que el bit 7 esté en alto para activar el canal
     LDh [$19], A
-    LD A, [HL+]  ; Cargar parte baja del período (NR23)
-    LDh [$18], A
     ret
 
-    ; bucle para reproducir una secuencia de notas
-    .reset_delay:
-        ld a, 200 ;Music delay
-        ld [hl], a
-        ret
+    LD A, $ff
+    LDh [$25], A  ; NR52, reactiva el sonido
 
     .reset_song
-        ld hl, notas
-        ld c, 4     ; Número de notas a reproducir
+        ld hl, CurrentNote
+        ld [hl], 0     ; Volvemos al principio
         jp .continue
 
-game_over:
+
+sound_next_level:
+    ld a, $77
+    ldh [$10], a
+    ld a, $81
+    ldh [$11], a
+    ld a, $f3
+    ldh [$12], a  
+    ld a, $73;%00001101 ;$0d
+    ldh [$13], a
+    ld a, $86;%11000011 ;$c3
+    ldh [$14], a
+
     ret

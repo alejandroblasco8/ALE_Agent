@@ -29,8 +29,12 @@ main::
 
     call init_sound
 
+    call _wait_button
+
+    call sound
+
     .loop
-        call next_note
+        ;call next_note
 
         ; No need for wait for vblank
         ld de, _copy_entity_to_OAM
@@ -49,8 +53,6 @@ main::
 		call check_enemy_solid_collisions
 		
     jp .loop
-
-	call game_over
 
    	di     ;; Disable Interrupts
    	halt   ;; Halt the CPU (stop procesing here)
