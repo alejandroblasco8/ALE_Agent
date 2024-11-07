@@ -79,7 +79,7 @@ scenes_startscreen::
 	.init_tiles:
 		ld de, MazeTiles
 		ld hl, $8000
-		ld bc, 15*16
+		ld bc, NUM_TILES*16
 		call _copy_bc_bytes_de2hl
 
 	; Mostrar pantalla de inicio
@@ -158,9 +158,9 @@ change_map:
     .init_tiles:
 		ld de, MazeTiles
 		ld hl, $8000
-		ld bc, 15*16
+		ld bc, NUM_TILES*16
 		call _copy_bc_bytes_de2hl
-    
+
     pop de
 
 	.init_map:
@@ -198,8 +198,18 @@ change_map:
 			jr nz, .row_loop
     
     ld a, [CurrentLevel]
+
+    cp N_MAPS*2
+    jr nz, .not_last_map
+
+    call populate_end_score
+    ret
+
+    .not_last_map
+
     add 2
     ld [CurrentLevel], a
+
     ret
 
 ;; ############################################################################
@@ -428,5 +438,18 @@ sound_death:
     ldh [$13], a
     ld a, $86;%11000011 ;$c3
     ldh [$14], a
+
+    ret
+
+populate_end_score::
+    ld hl, SCORE_MAP_POS
+
+    ld a, [DEATHS_COUNTER]
+    add NUMBERS_TILES_START
+    ld [hl+], a
+
+    ld a, [DEATHS_COUNTER+1]
+    add NUMBERS_TILES_START
+    ld [hl], a
 
     ret
