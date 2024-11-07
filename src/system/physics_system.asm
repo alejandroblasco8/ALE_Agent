@@ -381,6 +381,7 @@ check_collisions_player_enemy::
         ld a, 28
         ld [hl+], a
         ld [hl], 20
+        call sound_death
 
         ld a, [DEATHS_COUNTER + 1]
         ld b, a
@@ -425,7 +426,8 @@ check_goal_entry::
 
     ld a,0
     call entityman_get_by_index
-
+    
+    call sound_next_level
     call next_level
     
     xor a
