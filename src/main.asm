@@ -1,3 +1,4 @@
+include "constants.asm"
 ;;----------LICENSE NOTICE-------------------------------------------------------------------------------------------------------;;
 ;;  This file is part of GBTelera: A Gameboy Development Framework                                                               ;;
 ;;  Copyright (C) 2024 ronaldo / Cheesetea / ByteRealms (@FranGallegoBR)                                                         ;;
@@ -15,8 +16,35 @@
 ;; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                         ;;
 ;;-------------------------------------------------------------------------------------------------------------------------------;;
 
-SECTION "Entry point", ROM0[$150]
+SECTION "Entry point", ROM0[$250]
 
 main::
-   di     ;; Disable Interrupts
-   halt   ;; Halt the CPU (stop procesing here)
+
+    call init_sound
+	call scenes_startscreen
+	call next_level
+    call physys_init_deaths_counter
+
+
+    .loop
+    
+        ; No need for wait for vblank
+        call aisys_enemies_shoot
+        call check_collisions_player_enemy
+		call check_collisions_enemy_solid
+
+        call _wait_vblank_start
+        call physys_move_player
+
+        ld de, _copy_entity_to_OAM
+        ld hl, _entities_array
+        ld bc, OAM_START_ADDR
+
+        call _wait_vblank_start
+        call entityman_for_each
+
+
+    jp .loop
+
+   	di     ;; Disable Interrupts
+   	halt   ;; Halt the CPU (stop procesing here)
