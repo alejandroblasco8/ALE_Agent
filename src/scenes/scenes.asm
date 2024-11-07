@@ -369,7 +369,21 @@ next_note:
 
 
 sound_next_level:
-    ld a, $77
+    ld a, $17
+    ldh [$10], a
+    ld a, $81
+    ldh [$11], a
+    ld a, $f3
+    ldh [$12], a  
+    ld a, $73;%00001101 ;$0d
+    ldh [$13], a
+    ld a, $86;%11000011 ;$c3
+    ldh [$14], a
+
+    ret
+
+sound_death:
+    ld a, $7c
     ldh [$10], a
     ld a, $81
     ldh [$11], a

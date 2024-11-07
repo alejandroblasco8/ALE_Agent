@@ -31,8 +31,6 @@ main::
 
     call _wait_button
 
-    call sound
-
     .loop
         ;call next_note
 
