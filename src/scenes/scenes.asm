@@ -10,23 +10,6 @@ SECTION "Scenes", ROM0
 
 player1: db 28, 20, $04, 0, 7, 8
 
-; Datos de notas, cada nota es dos bytes, baja y alta (NR23 y NR24)
-notas:
-    Db $0d, $85  ; Nota 1
-    Db $0d, $83  ; Nota 2
-    Db $0d, $85  ; Nota 1
-    Db $0d, $83  ; Nota 2
-    ;Db $70, $01  ; Nota 3
-    ;Db $00, $02  ; Nota 4
-    ;Db $20, $30  ; Nota 4
-    ;Db $20, $30  ; Nota 4
-    ;Db $60, $13  ; Nota 4
-MusicDelay:
-    DB 5
-
-CurrentNote:
-    Db 0
-
 ;; ############################################################################
 ;; Detects if some button is pressed
 ;;
@@ -351,67 +334,6 @@ init_sound:
     LDh [$25], A  ; NR52, reactiva el sonido
 
     ret
-
-
-;; ############################################################################
-;; Next note
-;;
-;; INPUT: None
-;;
-;; OUTPUT: None
-;; 
-;; MODIfIES: AF, HL, BC, DE
-;; ############################################################################
-next_note:
-    ld hl, MusicDelay
-    ld a, [hl]
-    dec a
-    ret nz
-
-    ld a, 5
-    ld [hl], a
-
-    ld hl, CurrentNote
-    ld c, [hl]     ; Número de nota
-    ld b, $00
-
-    
-    ; Calculamos la nota actual
-    add hl, bc
-
-    push hl
-
-    inc c
-    ld a, c
-    cp 4; numero total de notas
-    jr z, .reset_song
-
-    .continue:
-
-    ; Guardamos en memoria cual seria la siguiente nota
-    ld hl, CurrentNote
-    ld [hl], c
-
-    pop hl
-
-    ld a, $00
-    ldh [$25], A  ; NR52 - apaga el sonido
-
-    LD A, [HL+]  ; Cargar parte alta del período y banderas de control (NR24)
-    LDh [$18], A
-    LD A, [HL+]  ; Cargar parte baja del período (NR23)
-    or %10000000 ; asegurar que el bit 7 esté en alto para activar el canal
-    LDh [$19], A
-    ret
-
-    LD A, $ff
-    LDh [$25], A  ; NR52, reactiva el sonido
-
-    .reset_song
-        ld hl, CurrentNote
-        ld [hl], 0     ; Volvemos al principio
-        jp .continue
-
 
 sound_next_level:
     ld a, $17
