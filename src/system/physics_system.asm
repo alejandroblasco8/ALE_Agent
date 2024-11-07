@@ -166,7 +166,7 @@ physys_check_collision_down::
 
     ;;DOWN
     ld a, b
-    sub 16
+    sub 17
     add HEIGHT
     and a, %11111000
     ld l, a
@@ -197,7 +197,7 @@ physys_check_collision_down::
 
     ;;UP-LEFT
     ld a, c
-    sub 8
+    sub 7
     srl a ; a / 2
     srl a ; a / 4
     srl a ; a / 8
