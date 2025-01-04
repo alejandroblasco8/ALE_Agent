@@ -32,13 +32,13 @@ class Layer {
 
 class Network {
     public:
-        Network(int, int, int);
-        void add_layer(Layer);
+        Network() = default;
+        void addLayer(Layer);
 
+		unsigned int getNumLayers();
 
     private:
         vector<Layer> layers;
-        int n_layers;
 };
 
 #endif
