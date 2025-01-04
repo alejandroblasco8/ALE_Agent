@@ -19,8 +19,9 @@ Neuron::initWeights(int n_weights){
     }
 }
 
-Layer::Layer(int n_neurons, int n_weights) {
+Layer::Layer(int n_neurons, int n_weights, unique_ptr<ActivationFunction> af) {
     this->initNeurons(n_neurons, n_weights);
+	this->activationFunction = std::move(af);
 }
 
 void
