@@ -1,21 +1,18 @@
 #ifndef NEURONAL_NETWORK_H
 #define NEURONAL_NETWORK_H
 
-#include "activation_function.h"
+#define int N_WEIGHT = 6;
+
 #include <vector>
-#include <memory>
 
 using namespace std;
 
 class Neuron {
     public:
-        Neuron(int, int);
-        void initWeights(int);
+        Neuron(int);
+        void initWeights();
         double getOutputValue() const { return outputValue; }
         vector<double>& getOutputWeights() { return weights; }
-
-    
-    private:
         double outputValue;
         vector<double> weights;
         int myIndex;
@@ -24,24 +21,32 @@ class Neuron {
 
 class Layer {
     public:
-        Layer(int, int, unique_ptr<ActivationFunction>);
-        void initNeurons(int, int);
+        Layer(int);
+        void initNeurons(int);
         vector<Neuron>& getNeurons() { return neurons; }
-
-    private:
         vector<Neuron> neurons;
-		unique_ptr<ActivationFunction> activationFunction;
+        vector<double> bias;
 };
 
 class Network {
     public:
-        Network() = default;
-        void addLayer(Layer);
+        Network(int, int, int, vector<unsigned>);
+        void add_layer(Layer);
+        void train(int epochs);
+        void forward_propagate(vector<double>);
+        void back_propagate(vector<double>);
+        vector<double> softmax(const vector<double>&);
+        double sigmoid(double);
+        double sigmoid_derivative(double);
+        double relu(double);
 
-		unsigned int getNumLayers();
 
     private:
+        double learning_rate;
         vector<Layer> layers;
+        int n_layers;
+        vector<vector<double>> inputData;
+        vector<vector<double>> outputData;
 };
 
 #endif
