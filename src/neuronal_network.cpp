@@ -1,4 +1,4 @@
-#include "neuronal_network.h"
+#include "../include/neuronal_network.h"
 #include <iostream>
 #include <cstdlib>
 #include <cmath>
@@ -36,11 +36,11 @@ Layer::initNeurons(int n_neurons) {
 Network::Network(int n_inputs, int n_hidden, int n_outputs, vector<unsigned> data) {
     this->n_layers = 0;
     //Añadimos la capa de entrada.
-    this->add_layer(Layer(n_inputs, n_inputs));
+    this->add_layer(Layer(n_inputs));
     //Añadimos la capa oculta. Añadimos 1 al segundo argumento para el bias.
-    this->add_layer(Layer(n_hidden, n_inputs+1));
+    this->add_layer(Layer(n_hidden));
     //Añadimos capa de salida. Si es, por ejemplo, binaria, n_outputs será 2
-    this->add_layer(Layer(n_outputs, n_hidden+1));
+    this->add_layer(Layer(n_outputs));
 }
 
 void
@@ -51,7 +51,7 @@ Network::add_layer(Layer new_layer) {
 
 
 vector<double>
-Netowork::softmax(const vector<double>& inputs) {
+Network::softmax(const vector<double>& inputs) {
     vector<double> outputs(inputs.size());
     double maxInput = *max_element(inputs.begin(), inputs.end());
     double sumExp = 0.0;

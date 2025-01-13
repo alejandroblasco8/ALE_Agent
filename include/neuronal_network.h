@@ -1,7 +1,7 @@
 #ifndef NEURONAL_NETWORK_H
 #define NEURONAL_NETWORK_H
 
-#define int N_WEIGHT = 6;
+int N_WEIGHT = 6;
 
 #include <vector>
 
