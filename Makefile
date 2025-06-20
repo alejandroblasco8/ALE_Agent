@@ -1,8 +1,8 @@
 CXX = g++
 CXXFLAGS = -Wall -I./include
 
-TARGET = main
-SRCS = main.cpp src/neuronal_network.cpp src/activation_function.cpp
+TARGET = test_network
+SRCS = test_network.cpp src/neuronal_network.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 $(TARGET): $(OBJS)

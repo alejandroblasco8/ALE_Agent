@@ -6,18 +6,16 @@
 #include <algorithm>
 
 Neuron::Neuron(int index) {
-    //Inicializar pesos teniendo en cuenta el número de pesos (n_weights)
-    this->initWeights();
-
-    //Atributo para facilitar la identificación de cada neurona (se quitará si no ayuda)
     this->myIndex = index;
+    outputValue = 0.0;
 }
 
 void
-Neuron::initWeights(){
-    for(int i = 0; i < N_WEIGHT; i++){
-        //Habrá que modificar el 0 por pesos random
-        weights.push_back(0);
+Neuron::initWeights(int n_outputs){
+    weights.clear();
+    for(int i = 0; i < n_outputs; i++){
+        double w = static_cast<double>(rand()) / RAND_MAX - 0.5;
+        weights.push_back(w);
     }
 }
 
@@ -29,22 +27,31 @@ void
 Layer::initNeurons(int n_neurons) {
     for(int i = 0; i < n_neurons; i++){
         neurons.push_back(Neuron(i));
-        bias.push_back(0); //Añadir número aleatorio
+        double b = static_cast<double>(rand()) / RAND_MAX - 0.5;
+        bias.push_back(b);
     }
 }
 
-Network::Network(int n_inputs, int n_hidden, int n_outputs, vector<unsigned> data) {
+Network::Network(int n_inputs, int n_hidden, int n_outputs, double lr) {
     this->n_layers = 0;
-    //Añadimos la capa de entrada.
+    learning_rate = lr;
+    srand(time(nullptr));
+    // Input layer
     this->add_layer(Layer(n_inputs));
-    //Añadimos la capa oculta. Añadimos 1 al segundo argumento para el bias.
+    // Hidden layer
     this->add_layer(Layer(n_hidden));
-    //Añadimos capa de salida. Si es, por ejemplo, binaria, n_outputs será 2
+    // Output layer
     this->add_layer(Layer(n_outputs));
 }
 
 void
 Network::add_layer(Layer new_layer) {
+    if(!layers.empty()) {
+        int nextSize = new_layer.neurons.size();
+        for(Neuron& n : layers.back().neurons){
+            n.initWeights(nextSize);
+        }
+    }
     layers.push_back(new_layer);
     this->n_layers++;
 }
@@ -84,84 +91,94 @@ Network::relu(double x){
 
 
 void
-Network::forward_propagate(vector<double> input){
+Network::forward_propagate(const vector<double>& input){
     //Propagación hacia adelante de la capa de entrada
     for(int j = 0; j < layers[0].neurons.size(); j++){
         layers[0].neurons[j].outputValue = input[j];
     }
 
-    //Propagación hacia adelante de las capas ocultas
-    for(int j = 1; j < layers.size() - 1; j++){
-        vector<Neuron>& prev_neurons = layers[j - 1].neurons;
-        for (int n = 0; n < layers[j].neurons.size(); n++) {
-            double sum = 0.0;
-            for (int i = 0; i < prev_neurons.size(); i++) {
-                sum += prev_neurons[i].getOutputValue() * prev_neurons[i].weights[n];
+    for(size_t l = 1; l < layers.size(); ++l){
+        Layer& prev = layers[l-1];
+        Layer& curr = layers[l];
+        vector<double> sums(curr.neurons.size(), 0.0);
+        for(size_t n = 0; n < curr.neurons.size(); ++n){
+            double sum = curr.bias[n];
+            for(size_t p = 0; p < prev.neurons.size(); ++p){
+                sum += prev.neurons[p].outputValue * prev.neurons[p].weights[n];
             }
-            sum += layers[j].bias[n];
-            layers[j].neurons[n].outputValue = sigmoid(sum);
+            sums[n] = sum;
         }
-    }
-
-    //Propagación hacia adelante de la capa de salida (softmax)
-    vector<double> outputs;
-    for (Neuron& neuron : layers.back().neurons) {
-        outputs.push_back(neuron.outputValue);
-    }
-    vector<double> softmaxOutputs = softmax(outputs);
-
-    for (int i = 0; i < layers.back().neurons.size(); i++) {
-        layers.back().neurons[i].outputValue = softmaxOutputs[i];
+        if(l == layers.size()-1){
+            vector<double> out = softmax(sums);
+            for(size_t n=0; n<curr.neurons.size(); ++n)
+                curr.neurons[n].outputValue = out[n];
+        }else{
+            for(size_t n=0; n<curr.neurons.size(); ++n)
+                curr.neurons[n].outputValue = sigmoid(sums[n]);
+        }
     }
 
 }
 
 void
-Network::back_propagate(vector<double> target){
+Network::back_propagate(const vector<double>& target){
 
     Layer& outputLayer = layers.back();
     Layer& prevLayer = layers[layers.size() - 2];
 
-    // Cálculo del gradiente de salida = y*(output-target)
-    for (int i = 0; i < outputLayer.neurons.size(); i++) {
-        double output = outputLayer.neurons[i].getOutputValue();
-        double delta = output - target[i]; // Gradiente simplificado para softmax + cross-entropy
+    vector<double> next_deltas(outputLayer.neurons.size());
 
-        // Actualizar pesos y bias
-        for (int j = 0; j < prevLayer.neurons.size(); j++) {
+    for (size_t i = 0; i < outputLayer.neurons.size(); ++i) {
+        double output = outputLayer.neurons[i].getOutputValue();
+        double delta = output - target[i];
+        next_deltas[i] = delta;
+        for (size_t j = 0; j < prevLayer.neurons.size(); ++j) {
             prevLayer.neurons[j].weights[i] -= learning_rate * delta * prevLayer.neurons[j].getOutputValue();
         }
         outputLayer.bias[i] -= learning_rate * delta;
     }
 
-    // Propagar el error hacia atrás en las capas ocultas
-    for (int l = layers.size() - 2; l > 0; l--) {
+    for (int l = layers.size() - 2; l > 0; --l) {
         Layer& hiddenLayer = layers[l];
         Layer& prevHiddenLayer = layers[l - 1];
+        vector<double> curr_deltas(hiddenLayer.neurons.size(), 0.0);
 
-        for (int i = 0; i < hiddenLayer.neurons.size(); i++) {
+        for (size_t i = 0; i < hiddenLayer.neurons.size(); ++i) {
             double error = 0.0;
-            for (Neuron& nextNeuron : layers[l + 1].neurons) {
-                error += nextNeuron.weights[i] * (nextNeuron.outputValue - target[i]);
+            for (size_t k = 0; k < next_deltas.size(); ++k) {
+                error += hiddenLayer.neurons[i].weights[k] * next_deltas[k];
             }
-            double gradient = error * sigmoid_derivative(hiddenLayer.neurons[i].getOutputValue());
+            double delta = error * sigmoid_derivative(hiddenLayer.neurons[i].getOutputValue());
+            curr_deltas[i] = delta;
 
-            // Actualizar pesos y bias
-            for (int j = 0; j < prevHiddenLayer.neurons.size(); j++) {
-                prevHiddenLayer.neurons[j].weights[i] -= learning_rate * gradient * prevHiddenLayer.neurons[j].getOutputValue();
+            for (size_t j = 0; j < prevHiddenLayer.neurons.size(); ++j) {
+                prevHiddenLayer.neurons[j].weights[i] -= learning_rate * delta * prevHiddenLayer.neurons[j].getOutputValue();
             }
-            hiddenLayer.bias[i] -= learning_rate * gradient;
+            hiddenLayer.bias[i] -= learning_rate * delta;
         }
+        next_deltas = curr_deltas;
     }
 }
 
 void
-Network::train(int epochs){
-    double error;
-    int size = inputData.size();
+Network::train(const vector<vector<double>>& inputs,
+               const vector<vector<double>>& targets,
+               int epochs){
     for(int i = 0; i < epochs; i++){
-        int index = rand() % size;
-        forward_propagate(inputData[index]);
-        back_propagate(outputData[index]);
+        int index = rand() % inputs.size();
+        forward_propagate(inputs[index]);
+        back_propagate(targets[index]);
     }
+}
+
+vector<vector<double>>
+Network::getWeights(int layer_index) const {
+    vector<vector<double>> w;
+    if(layer_index <= 0 || layer_index >= layers.size())
+        return w;
+    const Layer& prev = layers[layer_index-1];
+    for(const Neuron& n : prev.neurons) {
+        w.push_back(n.weights);
+    }
+    return w;
 }
