@@ -15,6 +15,11 @@ constexpr uint32_t maxSteps = 12000;
 // File where RAM states and actions will be stored
 std::ofstream g_csvFile;
 
+// Global Variables
+size_t g_frameCount = 0;
+std::vector<uint8_t> g_prevRam(128, 0);
+bool g_firstFrame = true;
+
 ///////////////////////////////////////////////////////////////////////////////
 /// Get info from RAM
 ///////////////////////////////////////////////////////////////////////////////
@@ -31,6 +36,54 @@ int32_t getBallX(ALEInterface& alei) {
 ///////////////////////////////////////////////////////////////////////////////
 
 void printRam(ALEInterface& alei, Action act){
+   std::system("clear");
+
+   const ALERAM &ram = alei.getRAM();
+
+   // Show RAM
+   std::printf("    ");
+   for (int col = 0; col < 16; ++col)
+      std::printf(" %3d", col);
+   std::printf("\n");
+
+   for (size_t i = 0; i < ram.size(); ++i) {
+      if (i % 16 == 0)
+         std::printf("%3zu:", i);
+      std::printf(" %3u", ram.get(i));
+      if ((i + 1) % 16 == 0)
+         std::printf("\n");
+   }
+
+   // Show RAM(t) - RAM(t-1)
+   if (!g_firstFrame) {
+      std::printf("\n== Δ RAM (actual - anterior) ==\n    ");
+      for (int col = 0; col < 16; ++col)
+         std::printf(" %4d", col);
+      std::printf("\n");
+
+      for (size_t i = 0; i < ram.size(); ++i) {
+         if (i % 16 == 0)
+            std::printf("%3zu:", i);
+         int delta = static_cast<int>(ram.get(i)) - static_cast<int>(g_prevRam[i]);
+         std::printf(" %+4d", delta);
+         if ((i + 1) % 16 == 0)
+            std::printf("\n");
+      }
+   }
+
+   // Save prev RAM
+   for (size_t i = 0; i < ram.size(); ++i)
+      g_prevRam[i] = ram.get(i);
+
+   g_firstFrame = false;
+
+   // Show action and frame
+   std::cout << "\nAction: " << action_to_string(act) << std::endl;
+   std::cout << "Frame: " << g_frameCount << std::endl;
+   ++g_frameCount;
+}
+
+/*void printRam(ALEInterface& alei, Action act){
 
    std::system("clear");
 
@@ -54,7 +107,7 @@ void printRam(ALEInterface& alei, Action act){
       std::printf("\n");
 
    std::cout << "Action: " << action_to_string(act) << std::endl;
-}
+}*/
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Save frame state and action
@@ -134,7 +187,8 @@ int main(int argc, char **argv) {
    alei.setInt  ("random_seed", 0);
    alei.setFloat("repeat_action_probability", 0); //Si no se pone a 0 por defecto es 0.25. Es la probabilidad de que repita un movimiento sin importar lo que hayamos hecho
    alei.setBool ("display_screen", true);
-   alei.setBool ("sound", true);
+   alei.setInt("frame_skip", 1);
+   alei.setBool ("sound", false);
    alei.loadROM (argv[1]); //alei.loadROM (argv[1]);
 
    // Checks if CSV file exists before writing header
