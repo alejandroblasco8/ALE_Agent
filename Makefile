@@ -1,15 +1,20 @@
-CXX = g++
-CXXFLAGS = -Wall -I./include
+CXX      := g++
+CXXFLAGS := -std=c++17 -Iinclude -Wall -Wextra -pedantic
+TARGET   := main
 
-TARGET = test_network
-SRCS = test_network.cpp src/neuronal_network.cpp
-OBJS = $(SRCS:.cpp=.o)
+SRC := \
+    main.cpp \
+    src/perceptron.cpp \
+    src/neural_network.cpp \
+    src/activation_functions/step.cpp \
+    src/activation_functions/relu.cpp \
+    src/activation_functions/softmax.cpp
 
-$(TARGET): $(OBJS)
-	$(CXX) $(OBJS) -o $(TARGET)
-
-%.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+$(TARGET): $(SRC)
+	$(CXX) $(CXXFLAGS) $^ -o $@
 
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -f $(TARGET)
+
+.PHONY: all clean
+all: $(TARGET)
