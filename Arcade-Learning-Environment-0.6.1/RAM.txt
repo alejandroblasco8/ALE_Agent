@@ -1,0 +1,21 @@
+Bicho 1 es el que está mas abajo
+---------------------------------------------------------------------------
+0 - 5       Puntuación
+16  (10)    Varía cuando te mueves
+21  (15)    Posición del disparo y pasa de 3 a 159 sumando de 3 en 3
+28  (1C)    Cambia de 1 a 65 cuando disparamos
+29          Animación bicho 3 (4-5-6-5-4-5-6...) (=0 cuando no hay bicho)
+30          Animación bicho 2 (4-5-6-5-4-5-6...) (=0 cuando no hay bicho)
+31          Animación bicho 1 (4-5-6-5-4-5-6...) (=0 cuando no hay bicho)
+32  (20)    Varía cuando te pones delante de un bicho
+33          Animación bicho 3 (4-5-6-5-4-5-6...) (=0 cuando no hay bicho)
+34          Animación bicho 2 (4-5-6-5-4-5-6...) (=0 cuando no hay bicho)
+35          Animación bicho 1 (4-5-6-5-4-5-6...) (=0 cuando no hay bicho)
+63  (3F)    Cuando estmos vivos es 51, cuando estamos muertos es 3
+64          (32-40-48-40-32...)                                                         ???
+66          (32-40-48-40-32...)                                                         ???
+69          Altura enemigo 3
+70          Altura enemigo 2
+71  (47)    Altura enemigo 1
+114 (72)    Manual not                                                                  ???
+126 (FE)    Cambia de 91 a 78 cuando matas a un bicho

@@ -10,7 +10,7 @@
 #include <cstdio>
 
 // Constants
-constexpr uint32_t maxSteps = 7500;
+constexpr uint32_t maxSteps = 12000;
 
 // File where RAM states and actions will be stored
 std::ofstream g_csvFile;
@@ -137,15 +137,23 @@ int main(int argc, char **argv) {
    alei.setBool ("sound", true);
    alei.loadROM (argv[1]); //alei.loadROM (argv[1]);
 
+   // Checks if CSV file exists before writing header
+   bool writeHeader = true;
+   std::ifstream infile("ram_log.csv");
+   if (infile.good() && infile.peek() != std::ifstream::traits_type::eof()) {
+      writeHeader = false;
+   }
+   infile.close();
+
    // Open CSV file and write header
-   g_csvFile.open("ram_log.csv");
-   if (g_csvFile.is_open()) {
+   g_csvFile.open("ram_log.csv", std::ios::out | std::ios::app);
+   /*if (g_csvFile.is_open()) {
       for (size_t i = 0; i < RAM_LENGTH; ++i) {
          g_csvFile << "ram" << i;
          g_csvFile << ',';
       }
       g_csvFile << "action\n";
-   }
+   }*/
 
    // Init
    std::srand(static_cast<uint32_t>(std::time(0)));
