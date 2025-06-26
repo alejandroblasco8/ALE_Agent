@@ -4,57 +4,51 @@
 #include <cassert>
 #include <iostream>
 
-using std::cout;
-using std::endl;
-using std::make_unique;
-using std::mt19937;
-using std::size_t;
-using std::uniform_int_distribution;
-using std::vector;
-
-Perceptron::Perceptron(size_t input_dim, float learning_rate,
-                       size_t randomSeed) {
+Perceptron::Perceptron(std::size_t input_dim, std::size_t randomSeed) {
   this->input_dim = input_dim;
-  this->learning_rate = learning_rate;
 
-  this->weights = vector<float>(input_dim + 1, 0.0);
-  this->afunc = make_unique<StepFunction>();
+  this->weights = std::vector<float>(input_dim + 1, 0.0);
+  this->afunc = std::make_unique<StepFunction>();
 
-  this->rng = mt19937(randomSeed);
+  this->rng = std::mt19937(randomSeed);
 }
 
-int Perceptron::predict(const vector<float> &input) const {
+int Perceptron::predict(const std::vector<float> &input) const {
   float sum = this->weights[0];
 
-  for (size_t i = 0; i < input.size(); i++) {
+  for (std::size_t i = 0; i < input.size(); i++) {
     sum += input[i] * this->weights[i + 1];
   }
 
-  float output = this->afunc->activate(sum);
+  std::vector<float> tmp = {sum};
+  this->afunc->activate(tmp);
+  float output = tmp[0];
+
   return static_cast<int>(output);
 }
 
-void Perceptron::fit(const vector<vector<float>> &x, const vector<int> &y,
-                     size_t epochs) {
+void Perceptron::fit(const std::vector<std::vector<float>> &x,
+                     const std::vector<int> &y, std::size_t epochs,
+                     float learning_rate) {
   // Ensure X and Y are the same size
   assert(x.size() == y.size());
 
-  vector<float> bestWeights = this->weights;
+  std::vector<float> bestWeights = this->weights;
   float bestAcc = 0.0;
 
-  cout << "Starting training..." << endl;
+  std::cout << "Starting training..." << std::endl;
 
   // Loop over the specified epochs
-  for (size_t e = 0; e < epochs + 1; ++e) {
+  for (std::size_t e = 0; e < epochs + 1; ++e) {
     if (e != epochs) {
-      cout << "Epoch " << e << "/" << epochs - 1 << endl;
+      std::cout << "Epoch " << e << "/" << epochs - 1 << std::endl;
     }
 
-    vector<size_t> errors;
+    std::vector<std::size_t> errors;
 
     // Collect all the misclassified samples
-    for (size_t i = 0; i < x.size(); ++i) {
-      const vector<float> &input = x.at(i);
+    for (std::size_t i = 0; i < x.size(); ++i) {
+      const std::vector<float> &input = x.at(i);
       int target = y[i];
 
       int pred = this->predict(input);
@@ -67,13 +61,13 @@ void Perceptron::fit(const vector<vector<float>> &x, const vector<int> &y,
     float accuracy = static_cast<float>(x.size() - errors.size()) / x.size();
 
     if (e != epochs) {
-      cout << errors.size() << " samples misclassified in epoch " << e
-           << " with " << accuracy << " accuracy" << endl;
+      std::cout << errors.size() << " samples misclassified in epoch " << e
+                << " with " << accuracy << " accuracy" << std::endl;
     }
 
     // Save the new weights and accuracy if it has improved
     if (accuracy > bestAcc) {
-      cout << "Best accuracy and weights updated" << endl;
+      std::cout << "Best accuracy and weights updated" << std::endl;
 
       bestWeights = this->weights;
       bestAcc = accuracy;
@@ -81,7 +75,7 @@ void Perceptron::fit(const vector<vector<float>> &x, const vector<int> &y,
 
     // Exit early if there are no errors
     if (errors.empty() && !(e == epochs)) {
-      cout << "Exiting early with perfect accuracy" << endl;
+      std::cout << "Exiting early with perfect accuracy" << std::endl;
       bestWeights = this->weights;
       break;
     }
@@ -92,40 +86,40 @@ void Perceptron::fit(const vector<vector<float>> &x, const vector<int> &y,
     }
 
     // Pick a random error
-    uniform_int_distribution<size_t> uni(0, errors.size() - 1);
-    size_t index = errors[uni(this->rng)];
+    std::uniform_int_distribution<std::size_t> uni(0, errors.size() - 1);
+    std::size_t index = errors[uni(this->rng)];
 
-    cout << "Error " << index << " (base 0) selected to update the weights"
-         << endl;
+    std::cout << "Error " << index << " (base 0) selected to update the weights"
+              << std::endl;
 
-    const vector<float> &errX = x[index];
+    const std::vector<float> &errX = x[index];
     int errY = (y[index] == 0) ? -1 : 1;
 
     // Update the learning rate
     this->weights[0] += learning_rate * errY;
 
     // Update the weights
-    for (size_t j = 0; j < errX.size(); ++j) {
-      this->weights[j + 1] += this->learning_rate * errY * errX[j];
+    for (std::size_t j = 0; j < errX.size(); ++j) {
+      this->weights[j + 1] += learning_rate * errY * errX[j];
     }
 
-    cout << "Updated weights:";
+    std::cout << "Updated weights:";
 
-    for (size_t j = 0; j < this->weights.size(); ++j) {
-      cout << " " << this->weights[j];
+    for (std::size_t j = 0; j < this->weights.size(); ++j) {
+      std::cout << " " << this->weights[j];
     }
 
-    cout << endl;
+    std::cout << std::endl;
   }
 
-  cout << "Training completed" << endl;
-  cout << "Best weights after training: [";
+  std::cout << "Training completed" << std::endl;
+  std::cout << "Best weights after training: [";
 
-  for (size_t i = 0; i < bestWeights.size(); ++i) {
-    cout << " " << bestWeights[i];
+  for (std::size_t i = 0; i < bestWeights.size(); ++i) {
+    std::cout << " " << bestWeights[i];
   }
 
-  cout << " ] with accuracy: " << bestAcc << endl;
+  std::cout << " ] with accuracy: " << bestAcc << std::endl;
 
   this->weights = bestWeights;
 }

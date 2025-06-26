@@ -19,13 +19,12 @@ private:
   std::mt19937 rng;
 
 public:
-  Perceptron(size_t input_dim, float learning_rate = 0.1,
-             size_t randomSeed = 1);
+  Perceptron(size_t input_dim, size_t randomSeed = 1);
 
   int predict(const std::vector<float> &input) const;
 
-  void fit(const std::vector<std::vector<float>> &x, const std::vector<int> &y,
-           size_t epochs);
+  void fit(const std::vector<std::vector<float>> &inputs,
+           const std::vector<int> &targets, size_t epochs, float learning_rate);
 };
 
 #endif // PERCEPTRON_H
