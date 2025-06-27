@@ -14,119 +14,6 @@ Perceptron::Perceptron(std::size_t input_dim, std::size_t randomSeed) {
   this->afunc = std::make_unique<StepFunction>();
 
   this->rng = std::mt19937(randomSeed);
-  this->target = "";
-}
-
-std::pair<std::vector<std::vector<float>>, std::vector<int>>
-Perceptron::load_dataset(const std::string &filename, const std::string& target_action) {
-  this->target = target_action;
-
-  std::vector<std::vector<float>> X;
-  std::vector<int> y;
-
-  std::ifstream file(filename);
-  if (!file.is_open()) {
-    std::cerr << "Error opening file: " << filename << std::endl;
-    return {X, y};
-  }
-
-  std::string line;
-  bool firstLine = true;
-
-  while (std::getline(file, line)) {
-    if (firstLine) {
-      firstLine = false;
-      continue;
-    }
-
-    std::stringstream ss(line);
-    std::string column;
-    std::vector<std::string> tokens;
-
-    while (std::getline(ss, column, ',')) {
-      tokens.push_back(column);
-    }
-
-    if (tokens.size() < 2) {
-      std::cerr << "Invalid line (too few columns): " << line << '\n';
-      continue;
-    }
-
-    std::vector<float> features;
-    for (size_t i = 0; i < tokens.size() - 1; ++i) {
-      try {
-        features.push_back(std::stof(tokens[i]));
-      } catch (const std::invalid_argument&) {
-        std::cerr << "Invalid float: " << tokens[i] << " in line: " << line << '\n';
-        features.clear();
-        break;
-      }
-    }
-
-    if (features.empty()) continue;
-
-    const std::string& action = tokens.back();
-    if (action == target_action) {
-      X.push_back(std::move(features));
-      y.push_back(1);
-    } else if (action == "PLAYER_A_NOOP") {
-      X.push_back(std::move(features));
-      y.push_back(0);
-    }
-  }
-
-  file.close();
-  return {X, y};
-}
-
-
-std::pair<std::vector<std::vector<float>>, std::vector<int>>
-Perceptron::balance_dataset(const std::vector<std::vector<float>> &X, const std::vector<int> &y) {
-  std::vector<std::vector<float>> class0_X;
-  std::vector<std::vector<float>> class1_X;
-
-  for(std::size_t i = 0; i < y.size(); i++){
-    if(y[i] == 0){
-      class0_X.push_back(X[i]);
-    }
-    else{
-      class1_X.push_back(X[i]);
-    }
-  }
-
-  std::size_t count0 = class0_X.size();
-  std::size_t count1 = class1_X.size();
-
-  std::cout << "Original number of samples per action: class NOOP = " << count0 << ", class 1 = " << count1 << std::endl;
-
-  std::vector<std::vector<float>> balanced_X;
-  std::vector<int> balanced_y;
-
-  if (count0 > count1) {
-    std::shuffle(class0_X.begin(), class0_X.end(), rng);
-    for (std::size_t i = 0; i < count1; ++i) {
-      balanced_X.push_back(class0_X[i]);
-      balanced_y.push_back(0);
-    }
-    for (const auto& sample : class1_X) {
-      balanced_X.push_back(sample);
-      balanced_y.push_back(1);
-    }
-  } else {
-    std::shuffle(class1_X.begin(), class1_X.end(), rng);
-    for (std::size_t i = 0; i < count0; ++i) {
-      balanced_X.push_back(class1_X[i]);
-      balanced_y.push_back(1);
-    }
-    for (const auto& sample : class0_X) {
-      balanced_X.push_back(sample);
-      balanced_y.push_back(0);
-    }
-  }
-
-  std::cout << "Number of samples per action after reduction: " << std::min(count0, count1) << std::endl;
-
-  return {balanced_X, balanced_y};
 }
 
 int Perceptron::predict(const std::vector<float> &input) const {
@@ -229,7 +116,6 @@ void Perceptron::fit(const std::vector<std::vector<float>> &x,
   }
 
   std::cout << "Training completed" << std::endl;
-  std::cout << "Perceptron " << this->target << "; ";
   std::cout << "Best weights after training: [";
 
   for (std::size_t i = 0; i < bestWeights.size(); ++i) {

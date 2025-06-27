@@ -18,6 +18,10 @@ void shuffleData(vector<vector<float>> &, vector<int> &, unsigned);
 void loadAndData(const std::string &, std::vector<std::vector<float>> &,
                  std::vector<int> &);
 void loadData(const string &, vector<vector<float>> &, vector<int> &, size_t);
+std::pair<std::vector<std::vector<float>>, std::vector<int>>
+loadDataPerceptron(const std::string &, const std::string& ) ;
+std::pair<std::vector<std::vector<float>>, std::vector<int>>
+shuffleDataPerceptron(const std::vector<std::vector<float>> &, const std::vector<int> &, unsigned seed = 1);
 
 size_t indexOfMax(const vector<float> &v) {
   if (v.empty()) {
@@ -118,7 +122,7 @@ void testNeuralNetork(NeuralNetwork &nn, vector<vector<float>> &inputs,
 
 void perceptron() {
   const vector<string> acciones = {
-    "PLAYER_A_LEFT", "PLAYER_A_RIGHT", "PLAYER_A_FIRE"
+    "PLAYER_A_LEFT", "PLAYER_A_RIGHT", "PLAYER_A_FIRE", "PLAYER_A_RIGHTFIRE", "PLAYER_A_LEFTFIRE"
   };
 
   const size_t epochs = 10;
@@ -127,10 +131,10 @@ void perceptron() {
   for (const auto& accion : acciones) {
     cout << "\nEntrenando perceptrón para acción: " << accion << endl;
 
-    Perceptron p(128);  // 128 características
+    Perceptron p(128);
 
-    auto [X, y] = p.load_dataset("ram2.csv", accion);
-    auto [balanced_X, balanced_y] = p.balance_dataset(X, y);
+    auto [X, y] = loadDataPerceptron("ram2.csv", accion);
+    auto [balanced_X, balanced_y] = shuffleDataPerceptron(X, y);
 
     testPerceptron(p, balanced_X, balanced_y, epochs, lr);
 
