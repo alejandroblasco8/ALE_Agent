@@ -3,7 +3,7 @@ project(ale)
 set(ALEVERSION "0.6")
 
 
-option(USE_SDL "Use SDL" OFF)
+option(USE_SDL "Use SDL" ON)
 option(USE_RLGLUE "Use RL-Glue" OFF)
 option(BUILD_EXAMPLES "Build Example Agents" ON)
 option(BUILD_CPP_LIB "Build C++ Shared Library" ON)
@@ -219,7 +219,6 @@ if(USE_RLGLUE)
   target_link_libraries(RLGlueExperiment rlgluenetdev)
 
 endif()
-
 
 ########### Add uninstall target ###############
   FILE(WRITE ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake
