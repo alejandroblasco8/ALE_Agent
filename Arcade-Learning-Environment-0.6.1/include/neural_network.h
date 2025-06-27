@@ -63,16 +63,17 @@ class NeuralNetwork {
 private:
   std::vector<Layer> layers;
 
-  void backPropagation(const std::vector<float> &expected);
+  void printWeights();
+  void backPropagation(int yTrue);
   void updateWeights(const std::vector<float> &input, float learningRate);
 
 public:
   NeuralNetwork(const std::vector<Layer> &layers);
   std::vector<float> feedForward(const std::vector<float> &input);
-  std::vector<Layer>& getLayers() { return layers; }
-  void printWeights();
-  void train(const std::vector<std::vector<float>> &inputs,
-             const std::vector<int> &targets, int epochs, float learningRate);
+  void train(const std::vector<std::vector<float>> &xTrain,
+             const std::vector<int> &yTrain,
+             const std::vector<std::vector<float>> &xVal,
+             const std::vector<int> &yVal, int epochs, float learningRate);
 };
 
 #endif // NEURAL_NETWORK
