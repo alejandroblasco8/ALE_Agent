@@ -120,7 +120,7 @@ void testNeuralNetork(NeuralNetwork &nn, vector<vector<float>> &inputs,
 }
 
 
-void perceptron() {
+void perceptronGame() {
   const vector<string> acciones = {
     "PLAYER_A_LEFT", "PLAYER_A_RIGHT", "PLAYER_A_FIRE", "PLAYER_A_RIGHTFIRE", "PLAYER_A_LEFTFIRE"
   };
