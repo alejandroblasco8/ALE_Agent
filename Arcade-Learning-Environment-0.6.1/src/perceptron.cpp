@@ -19,37 +19,58 @@ Perceptron::Perceptron(std::size_t input_dim, std::size_t randomSeed) {
 
 std::pair<std::vector<std::vector<float>>, std::vector<int>>
 Perceptron::load_dataset(const std::string &filename, const std::string& target_action) {
-  this-> target = target_action;
+  this->target = target_action;
+
   std::vector<std::vector<float>> X;
   std::vector<int> y;
 
   std::ifstream file(filename);
   if (!file.is_open()) {
     std::cerr << "Error opening file: " << filename << std::endl;
-    return {X, y}; 
+    return {X, y};
   }
 
   std::string line;
-  while (std::getline(file, line)) {
-    std::stringstream ss(line);
-    std::string cell;
-    std::vector<float> features;
+  bool firstLine = true;
 
-    while(std::getline(ss, cell, ',')) {
-      if (ss.peek() == '\n' || ss.eof()) {
-        break;
-      }
-      features.push_back(std::stof(cell));
+  while (std::getline(file, line)) {
+    if (firstLine) {
+      firstLine = false;
+      continue;
     }
 
-    std::getline(ss, cell, ',');
-    std::string action = cell;
+    std::stringstream ss(line);
+    std::string column;
+    std::vector<std::string> tokens;
 
-    if(action == target_action) {
-      X.push_back(features);
+    while (std::getline(ss, column, ',')) {
+      tokens.push_back(column);
+    }
+
+    if (tokens.size() < 2) {
+      std::cerr << "Invalid line (too few columns): " << line << '\n';
+      continue;
+    }
+
+    std::vector<float> features;
+    for (size_t i = 0; i < tokens.size() - 1; ++i) {
+      try {
+        features.push_back(std::stof(tokens[i]));
+      } catch (const std::invalid_argument&) {
+        std::cerr << "Invalid float: " << tokens[i] << " in line: " << line << '\n';
+        features.clear();
+        break;
+      }
+    }
+
+    if (features.empty()) continue;
+
+    const std::string& action = tokens.back();
+    if (action == target_action) {
+      X.push_back(std::move(features));
       y.push_back(1);
-    } else if (action == "PLAYER_A_NOOP"){
-      X.push_back(features);
+    } else if (action == "PLAYER_A_NOOP") {
+      X.push_back(std::move(features));
       y.push_back(0);
     }
   }
@@ -57,6 +78,7 @@ Perceptron::load_dataset(const std::string &filename, const std::string& target_
   file.close();
   return {X, y};
 }
+
 
 std::pair<std::vector<std::vector<float>>, std::vector<int>>
 Perceptron::balance_dataset(const std::vector<std::vector<float>> &X, const std::vector<int> &y) {

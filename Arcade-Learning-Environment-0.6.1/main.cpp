@@ -115,27 +115,29 @@ void testNeuralNetork(NeuralNetwork &nn, vector<vector<float>> &inputs,
        << ' ' << accAfter[2] << ' ' << accAfter[3] << '\n';
 }
 
+
 void perceptron() {
-  vector<vector<float>> inputs;
-  vector<int> targets;
+  const vector<string> acciones = {
+    "PLAYER_A_LEFT", "PLAYER_A_RIGHT", "PLAYER_A_FIRE"
+  };
 
-  try {
-    loadAndData("and.csv", inputs, targets);
-    shuffleData(inputs, targets, 1);
-
-    cout << "Loaded " << inputs.size() << " samples with " << inputs[0].size()
-         << " features." << endl;
-  } catch (const exception &e) {
-    cerr << "Error: " << e.what() << endl;
-    exit(1);
-  }
-
-  const float lr = 0.1;
   const size_t epochs = 10;
-  Perceptron p(inputs[0].size());
+  const float lr = 0.1;
 
-  testPerceptron(p, inputs, targets, epochs, lr);
+  for (const auto& accion : acciones) {
+    cout << "\nEntrenando perceptrón para acción: " << accion << endl;
+
+    Perceptron p(128);  // 128 características
+
+    auto [X, y] = p.load_dataset("ram2.csv", accion);
+    auto [balanced_X, balanced_y] = p.balance_dataset(X, y);
+
+    testPerceptron(p, balanced_X, balanced_y, epochs, lr);
+
+    cout << "---------------------------------------------\n";
+  }
 }
+
 
 void neuralNetwork() {
   vector<vector<float>> inputs;
@@ -168,8 +170,8 @@ void neuralNetwork() {
 }
 
 int main() {
-  // perceptron();
-  neuralNetwork();
+  perceptron();
+  //neuralNetwork();
 
   return 0;
 }
