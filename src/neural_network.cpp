@@ -3,8 +3,13 @@
 
 #include <algorithm>
 #include <cassert>
+#include <chrono>
+#include <iomanip>
 #include <iostream>
 #include <random>
+
+std::vector<double> accuracy(const std::vector<int> &preds,
+                             const std::vector<int> &targets, int nClasses);
 
 // START NEURON
 
@@ -37,18 +42,12 @@ float Neuron::feedForward(const std::vector<float> &input) {
         " inputs, but got " + std::to_string(input.size()));
   }
 
-  // std::cout // << "Output = w[0] = " // << this->weights[0] // << std::endl;
   float sum = this->weights[0];
 
   for (std::size_t i = 0; i < input.size(); ++i) {
-    // std::cout // << "Output += input[" // << i // << "] * w[" // << i + 1
-    // << "] = " // << input[i] // << " * " // << this->weights[i + 1] // << " =
-    // "
-    // << input[i] * this->weights[i + 1] // << std::endl;
     sum += input[i] * this->weights[i + 1];
   }
 
-  // std::cout // << "Output: " // << sum // << std::endl;
   return sum;
 }
 
@@ -142,7 +141,6 @@ std::vector<float> NeuralNetwork::feedForward(const std::vector<float> &input) {
   std::vector<float> output = input;
 
   for (std::size_t i = 0; i < this->layers.size(); ++i) {
-    // std::cout // << "Layer " // << i // << std::endl;
     output = this->layers[i].feedForward(output);
   }
 
@@ -174,56 +172,34 @@ std::vector<float> computeLossDerivative(const std::vector<float> &output,
   return diff;
 }
 
-void NeuralNetwork::backPropagation(const std::vector<float> &expected) {
-  for (int i = this->layers.size() - 1; i >= 0; --i) {
-    Layer &layer = this->layers[i];
-    std::vector<Neuron> &neurons = layer.getNeurons();
+void NeuralNetwork::backPropagation(int yTrue) {
+  for (int i = static_cast<int>(layers.size()) - 1; i >= 0; --i) {
 
+    Layer &layer = layers[i];
+    std::vector<Neuron> &ns = layer.getNeurons();
     std::vector<float> errors;
 
-    // Hidden layers
-    if (std::size_t(i) != this->layers.size() - 1) {
-      // std::cout // << "Hidden layer " // << i // << std::endl;
-      std::vector<Neuron> &nextNeurons = this->layers[i + 1].getNeurons();
+    if (i == static_cast<int>(layers.size()) - 1) {
 
-      // For each neuron of the layer
-      for (std::size_t j = 0; j < neurons.size(); ++j) {
-        // std::cout // << "Neuron " // << j // << std::endl;
-        float error = 0.0;
-
-        for (std::size_t k = 0; k < nextNeurons.size(); ++k) {
-          float neuronErr =
-              nextNeurons[k].getWeights()[j + 1] * nextNeurons[k].getDelta();
-          error += neuronErr;
-          // std::cout // << "Error " // << neuronErr // << std::endl;
-        }
-
-        // std::cout // << "Layer error: " // << error // << std::endl;
-        errors.push_back(error);
+      for (std::size_t j = 0; j < ns.size(); ++j) {
+        float p = ns[j].getOutput();
+        float delta = p - (j == static_cast<std::size_t>(yTrue));
+        ns[j].setDelta(delta);
       }
-      // Output layer
     } else {
-      // std::cout // << "Output layer " // << i // << std::endl;
+      std::vector<Neuron> &next = layers[i + 1].getNeurons();
 
-      for (std::size_t j = 0; j < neurons.size(); ++j) {
-        // std::cout // << "Neuron " // << j // << std::endl;
-        float output = neurons[j].getOutput();
-        // std::cout // << "Output: " // << output // << std::endl;
-        // std::cout // << "Expected: " // << expected[j] // << std::endl;
-        // std::cout // << "Error: " // << output - expected[j] // << std::endl;
-        errors.push_back(output - expected[j]);
+      for (std::size_t j = 0; j < ns.size(); ++j) {
+        float err = 0.f;
+        for (std::size_t k = 0; k < next.size(); ++k)
+          err += next[k].getWeights()[j + 1] * next[k].getDelta();
+        errors.push_back(err);
       }
-    }
-
-    // std::cout // << "[Backpropagation::CalculatingDeltas]" // << std::endl;
-    for (std::size_t j = 0; j < neurons.size(); ++j) {
-      // std::cout // << "Neuron " // << j // << std::endl;
-      float derivate =
-          layer.getActivationFunction().derivative(neurons[j].getOutput());
-      // std::cout // << "Derivate: " // << derivate // << std::endl;
-      // std::cout // << "Error: " // << errors[j] // << std::endl;
-      // std::cout // << "Delta: " // << errors[j] * derivate // << std::endl;
-      neurons[j].setDelta(errors[j] * derivate);
+      for (std::size_t j = 0; j < ns.size(); ++j) {
+        float dAct =
+            layer.getActivationFunction().derivative(ns[j].getOutput());
+        ns[j].setDelta(errors[j] * dAct);
+      }
     }
   }
 }
@@ -233,27 +209,17 @@ void NeuralNetwork::updateWeights(const std::vector<float> &input,
   std::vector<float> layerInput = input;
 
   for (std::size_t i = 0; i < layers.size(); ++i) {
-    // std::cout // << "Layer " // << i // << std::endl;
     Layer &layer = layers[i];
     std::vector<Neuron> &neurons = layer.getNeurons();
 
     for (std::size_t j = 0; j < neurons.size(); ++j) {
       auto &neuron = neurons[j];
-      // std::cout // << "  Neuron " // << j // << '\n';
 
-      // std::cout // << "    Old bias: " // << neuron.getWeights()[0] // <<
-      // '\n';
       neuron.getWeights()[0] -= learningRate * neuron.getDelta();
-      // std::cout // << "    New bias: " // << neuron.getWeights()[0] // <<
-      // '\n';
 
       for (std::size_t k = 0; k < layerInput.size(); ++k) {
-        // std::cout // << "    Old w[" // << k + 1
-        // << "]: " // << neuron.getWeights()[k + 1] // << '\n';
         neuron.getWeights()[k + 1] -=
             learningRate * neuron.getDelta() * layerInput[k];
-        // std::cout // << "    New w[" // << k + 1
-        // << "]: " // << neuron.getWeights()[k + 1] // << '\n';
       }
     }
 
@@ -264,33 +230,85 @@ void NeuralNetwork::updateWeights(const std::vector<float> &input,
   }
 }
 
-void NeuralNetwork::train(const std::vector<std::vector<float>> &inputs,
-                          const std::vector<int> &targets, int epochs,
-                          float learningRate) {
-  // For each epoch
-  std::cout << "Starting training..." << std::endl;
-  for (int epoch = 0; epoch < epochs; ++epoch) {
-    std::cout << "Epoch: " << epoch << std::endl;
-    // std::cout // << "__________"  << std::endl;
-
-    // Por each sample
-    for (std::size_t i = 0; i < inputs.size(); ++i) {
-      // std::cout // << "Sample: " // << i // << std::endl;
-      // std::cout // << "----------" // << std::endl;
-      // std::cout // << "[Feeding Forward]" // << std::endl;
-
-      std::vector<float> outputs = feedForward(inputs[i]);
-
-      std::vector<float> expected(
-          *max_element(targets.begin(), targets.end()) + 1, 0.0);
-      expected[targets[i]] = 1.0;
-
-      // std::cout // << "[Backpropagation]" // << std::endl;
-      backPropagation(expected);
-      // std::cout // << "[UpdateWeights]" // << std::endl;
-      updateWeights(inputs[i], learningRate);
+void NeuralNetwork::printWeights() {
+  std::cout << "{\n";
+  for (std::size_t l = 0; l < layers.size(); ++l) {
+    auto &layer = layers[l];
+    auto &neurons = layer.getNeurons();
+    std::cout << "  {\n";
+    for (auto &neuron : neurons) {
+      auto &w = neuron.getWeights();
+      std::cout << "    {";
+      for (std::size_t i = 0; i < w.size(); ++i) {
+        std::cout << w[i];
+        if (i < w.size() - 1)
+          std::cout << ", ";
+      }
+      std::cout << "},\n";
     }
+    std::cout << "  }";
+    if (l < layers.size() - 1)
+      std::cout << ",";
+    std::cout << "\n";
   }
+  std::cout << "};\n";
+}
+
+void NeuralNetwork::train(const std::vector<std::vector<float>> &xTrain,
+                          const std::vector<int> &yTrain,
+                          const std::vector<std::vector<float>> &xVal,
+                          const std::vector<int> &yVal, int epochs,
+                          float learningRate) {
+  const int nClasses = *std::max_element(yTrain.begin(), yTrain.end()) + 1;
+  std::cout << std::fixed << std::setprecision(2);
+
+  for (int epoch = 0; epoch < epochs; ++epoch) {
+    auto t0 = std::chrono::steady_clock::now();
+
+    for (std::size_t k = 0; k < xTrain.size(); ++k) {
+      feedForward(xTrain[k]);
+      backPropagation(yTrain[k]);
+      updateWeights(xTrain[k], learningRate);
+    }
+
+    std::vector<int> trainPreds, valPreds;
+    trainPreds.reserve(xTrain.size());
+    valPreds.reserve(xVal.size());
+
+    for (const auto &s : xTrain) {
+      auto out = feedForward(s);
+      trainPreds.push_back(static_cast<int>(std::distance(
+          out.begin(), std::max_element(out.begin(), out.end()))));
+    }
+
+    for (const auto &s : xVal) {
+      auto out = feedForward(s);
+      valPreds.push_back(static_cast<int>(std::distance(
+          out.begin(), std::max_element(out.begin(), out.end()))));
+    }
+
+    auto accTrain = accuracy(trainPreds, yTrain, nClasses);
+    auto accVal = accuracy(valPreds, yVal, nClasses);
+
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                  std::chrono::steady_clock::now() - t0)
+                  .count();
+
+    std::cout << "Epoch " << epoch + 1 << '/' << epochs << " | " << ms
+              << " ms\n";
+
+    std::cout << "  Train acc global: " << accTrain[0] << '%';
+    for (int c = 0; c < nClasses; ++c)
+      std::cout << " | class " << c << ": " << accTrain[c + 1] << '%';
+    std::cout << '\n';
+
+    std::cout << "  Val   acc global: " << accVal[0] << '%';
+    for (int c = 0; c < nClasses; ++c)
+      std::cout << " | class " << c << ": " << accVal[c + 1] << '%';
+    std::cout << "\n\n";
+  }
+
+  // printWeights();
 }
 
 // END NEURAL NETWORK
