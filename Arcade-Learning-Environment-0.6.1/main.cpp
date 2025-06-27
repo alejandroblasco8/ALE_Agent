@@ -268,8 +268,8 @@ void neuralNetwork() {
 }
 
 int main() {
-  // perceptron();
-  neuralNetwork();
+  perceptron();
+  // neuralNetwork();
 
   return 0;
 }

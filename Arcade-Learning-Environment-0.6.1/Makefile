@@ -16,11 +16,11 @@ main: main.cpp data.cpp preprocess.cpp \
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
 # Compilar perceptronMin
-perceptronMin: src/ML_IA_Perceptron.cpp src/activation_functions/step.cpp
+perceptronMin: src/ML_IA_Perceptron.cpp src/activation_functions/step.cpp data.cpp preprocess.cpp
 	$(CXX) -o $@ $^ $(LIBS) $(LDFLAGS)
 
 # Compilar NNMin
-NNMin: src/ML_IA_NN.cpp \
+NNMin: data.cpp preprocess.cpp src/ML_IA_NN.cpp \
        src/neural_network.cpp \
        src/weights_initialization/kaiming.cpp \
        src/activation_functions/relu.cpp \
