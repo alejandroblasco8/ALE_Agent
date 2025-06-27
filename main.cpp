@@ -9,6 +9,7 @@
 #include <random>
 #include <sstream>
 #include <stdexcept>
+#include <chrono>
 #include <unordered_map>
 #include <vector>
 
@@ -63,25 +64,51 @@ vector<int> predictAll(NeuralNetwork &net,
 
 void testPerceptron(Perceptron &p, vector<vector<float>> &inputs,
                     vector<int> &targets, const size_t epochs, float lr) {
-  vector<int> predsBefore;
-  predsBefore.reserve(inputs.size());
+  vector<pair<vector<float>, int>> data;
 
-  for (const auto &x : inputs) {
+  data.reserve(inputs.size());
+  for (size_t i = 0; i < inputs.size(); ++i) {
+    data.emplace_back(inputs[i], targets[i]);
+  }
+
+  unsigned seed = std::random_device{}();
+  shuffle(data.begin(), data.end(), default_random_engine(seed));
+
+  size_t testSize = data.size() * 0.2;
+  size_t trainSize = data.size() - testSize;
+
+  vector<vector<float>> trainInputs, testInputs;
+  vector<int> trainTargets, testTargets;
+
+  for (size_t i = 0; i < trainSize; ++i) {
+    trainInputs.push_back(data[i].first);
+    trainTargets.push_back(data[i].second);
+  }
+
+  for (size_t i = trainSize; i < data.size(); ++i) {
+    testInputs.push_back(data[i].first);
+    testTargets.push_back(data[i].second);
+  }
+
+  vector<int> predsBefore;
+  predsBefore.reserve(testInputs.size());
+
+  for (const auto &x : testInputs) {
     predsBefore.push_back(p.predict(x));
   }
 
-  auto accBefore = accuracy(predsBefore, targets, 2);
+  auto accBefore = accuracy(predsBefore, testTargets, 2);
 
-  p.fit(inputs, targets, epochs, lr);
+  p.fit(trainInputs, trainTargets, epochs, lr);
 
   vector<int> predsAfter;
-  predsAfter.reserve(inputs.size());
+  predsAfter.reserve(testInputs.size());
 
-  for (const auto &x : inputs) {
+  for (const auto &x : testInputs) {
     predsAfter.push_back(p.predict(x));
   }
 
-  auto accAfter = accuracy(predsAfter, targets, 2);
+  auto accAfter = accuracy(predsAfter, testTargets, 2);
 
   cout << "Accuracy before training:  " << accBefore[0] << ' ' << accBefore[1]
        << ' ' << accBefore[2] << '\n';
@@ -95,13 +122,15 @@ void testNeuralNetork(NeuralNetwork &nn, vector<vector<float>> &inputs,
   auto [xTrain, yTrain, xVal, yVal, xTest, yTest] =
       splitDataset(inputs, targets);
 
+  std::size_t nClasses = *std::max_element(yTrain.begin(), yTrain.end()) + 1;
+
   auto predsBefore = predictAll(nn, xTest);
-  auto accBefore = accuracy(predsBefore, yTest, 6);
+  auto accBefore = accuracy(predsBefore, yTest, nClasses);
 
   nn.train(xTrain, yTrain, xVal, yVal, epochs, lr);
 
   auto predsAfter = predictAll(nn, xTest);
-  auto accAfter = accuracy(predsAfter, yTest, 6);
+  auto accAfter = accuracy(predsAfter, yTest, nClasses);
 
   cout << "Accuracy before training: ";
   for (unsigned i = 0; i < accBefore.size(); ++i) {
@@ -132,7 +161,7 @@ void perceptron() {
   }
 
   const float lr = 0.001;
-  const size_t epochs = 10;
+  const size_t epochs = 15;
   Perceptron p(inputs[0].size());
 
   testPerceptron(p, inputs, targets, epochs, lr);
@@ -143,6 +172,7 @@ void neuralNetwork() {
   vector<int> targets;
 
   try {
+    // loadData("iris.csv", inputs, targets, 5);
     loadData("ram2.csv", inputs, targets, 128);
     shuffleData(inputs, targets, 1);
 
@@ -175,6 +205,7 @@ void neuralNetwork() {
     for (int t : targets) {
       ++classCounts[t];
     }
+
     std::cout << "Samples per class (balanced):\n";
     for (auto &kv : classCounts) {
       std::cout << "  class " << kv.first << ": " << kv.second << '\n';
@@ -201,7 +232,7 @@ void neuralNetwork() {
       Layer(15, 64, make_unique<ReLU>()),
       Layer(64, 128, make_unique<ReLU>()),
       Layer(128, 64, make_unique<ReLU>()),
-      Layer(64, 4, make_unique<Softmax>()),
+      Layer(64, 4, make_unique<Softmax>())
   };
 
   const int epochs = 10;

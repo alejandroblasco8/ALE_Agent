@@ -171,8 +171,14 @@ void loadData(const std::string &filename,
 
       if (filename.rfind("ram", 0) == 0) {
         row.push_back(static_cast<float>(stoi(column)));
+      } else if (filename.rfind("iris", 0) == 0) {
+        if (i != 0) {
+        	row.push_back(stof(column));
+        } else {
+        	continue;
+        }
       } else {
-        row.push_back(stof(column));
+     		std::runtime_error("Dataset loading not implemented");
       }
     }
 
