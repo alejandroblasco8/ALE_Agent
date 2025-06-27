@@ -71,6 +71,15 @@ void printRam(ALEInterface& alei, Action act){
       }
    }
 
+   // Mostrar ram.get(47) para ver los valores en binario, es candidata a contener la "i" utilizada en el calculo
+   // de las posiciones del jugador y enemigos, explicada en la memoria
+   /*std::printf("RAM[70] = %3u => Binario: ", ram.get(70));
+   for (int bit = 7; bit >= 0; --bit)
+      std::printf("%d", (ram.get(70) >> bit) & 1);
+   std::printf("\n");*/
+   
+
+
    // Save prev RAM
    for (size_t i = 0; i < ram.size(); ++i)
       g_prevRam[i] = ram.get(i);
@@ -82,32 +91,6 @@ void printRam(ALEInterface& alei, Action act){
    std::cout << "Frame: " << g_frameCount << std::endl;
    ++g_frameCount;
 }
-
-/*void printRam(ALEInterface& alei, Action act){
-
-   std::system("clear");
-
-   const ALERAM &ram = alei.getRAM();
-    // Column headers
-   std::printf("    ");
-   for (int col = 0; col < 16; ++col) {
-      std::printf(" %3d", col);
-   }
-   std::printf("\n");
-
-   // Values with row headers
-   for (size_t i = 0; i < ram.size(); ++i) {
-       if (i % 16 == 0)
-         std::printf("%3zu:", i);
-      std::printf(" %3u", ram.get(i));
-      if ((i + 1) % 16 == 0)
-         std::printf("\n");
-   }
-   if (ram.size() % 16 != 0)
-      std::printf("\n");
-
-   std::cout << "Action: " << action_to_string(act) << std::endl;
-}*/
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Save frame state and action
@@ -201,13 +184,6 @@ int main(int argc, char **argv) {
 
    // Open CSV file and write header
    g_csvFile.open("ram_log.csv", std::ios::out | std::ios::app);
-   /*if (g_csvFile.is_open()) {
-      for (size_t i = 0; i < RAM_LENGTH; ++i) {
-         g_csvFile << "ram" << i;
-         g_csvFile << ',';
-      }
-      g_csvFile << "action\n";
-   }*/
 
    // Init
    std::srand(static_cast<uint32_t>(std::time(0)));

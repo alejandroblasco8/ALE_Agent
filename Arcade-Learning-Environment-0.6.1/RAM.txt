@@ -1,21 +1,44 @@
 Bicho 1 es el que está mas abajo
 ---------------------------------------------------------------------------
 0 - 5       Puntuación
-16  (10)    Varía cuando te mueves
-21  (15)    Posición del disparo y pasa de 3 a 159 sumando de 3 en 3
+16  (10)    Auxiliar coordenada x pata izquierda jugador. () falta variable i para calcular la posicion del jugador(255*i) + ram(16) + 200(coordenada inicial) + 16(pata_izquierda-pata_derecha)
+17          Posicion bicho 3, sigue misma formula que el jugador
+18          Posicion bicho 2, sigue misma formula que el jugador
+19          Posicion bicho 1, sigue misma formula que el jugador
+21  (15)    Posición del disparo del jugador: pasa de 3 a 159 sumando de 3 en 3, si se mata a un enemigo se resetea a 3 ya que desaparece la bala
+22  (16)    Auxiliar coordenada x pata derecha jugador(255*i) + ram(16) + 200(coordenada inicial)
+            el jugador ocupa 16 de alguna unidad, ya que la para izquierda siempre tiene el valor de la para derecha + 16
+            La posicion del jugador decrementa conforme vamos a la derecha, por lo que la posicion "0" sería el límite derecho.
+
 28  (1C)    Cambia de 1 a 65 cuando disparamos
 29          Animación bicho 3 (4-5-6-5-4-5-6...) (=0 cuando no hay bicho)
 30          Animación bicho 2 (4-5-6-5-4-5-6...) (=0 cuando no hay bicho)
 31          Animación bicho 1 (4-5-6-5-4-5-6...) (=0 cuando no hay bicho)
-32  (20)    Varía cuando te pones delante de un bicho
+32  (20)    Varía cuando te pones delante de un bicho                                   ???
 33          Animación bicho 3 (4-5-6-5-4-5-6...) (=0 cuando no hay bicho)
 34          Animación bicho 2 (4-5-6-5-4-5-6...) (=0 cuando no hay bicho)
 35          Animación bicho 1 (4-5-6-5-4-5-6...) (=0 cuando no hay bicho)
+37-46       Posición y de las balas del enemigo
 63  (3F)    Cuando estmos vivos es 51, cuando estamos muertos es 3
-64          (32-40-48-40-32...)                                                         ???
-66          (32-40-48-40-32...)                                                         ???
+64          (32-40-48-40-32...)  Contadores del bicho 1                                                       ???
+66          (32-40-48-40-32...)  Contadores del bicho 1                                                ???
 69          Altura enemigo 3
 70          Altura enemigo 2
 71  (47)    Altura enemigo 1
-114 (72)    Manual not                                                                  ???
 126 (FE)    Cambia de 91 a 78 cuando matas a un bicho
+
+
+necesito encontrar i para pasarle a las nn las posiciones de todos como entradas
+
+no sirve:
+29,30,31,33,34,35,64,66,    #animaciones
+28,                         #bala jugador
+63,                         #cuando estamos muertos
+69,70,71,                    #altura enemigos
+126
+
+si sirve:
+0,1,2,3,4,5,                    #puntuacion
+16,17,18,19,                 #posiciones jugador y enemigos
+21,                             #altura bala jugador
+37,38,39,40,41,42,43,44,45,46 #altura bala enemigos
