@@ -2,6 +2,8 @@
 #define NEURAL_NETWORK_H
 
 #include "activation_functions/activation_function.h"
+#include "weights_initialization/kaiming.h"
+#include "weights_initialization/weights_initializer.h"
 
 #include <memory>
 #include <vector>
@@ -16,7 +18,10 @@ private:
   std::vector<float> weights;
 
 public:
-  Neuron(size_t nInputs, std::size_t randomSeed = 1);
+  Neuron(
+      size_t nInputs,
+      std::unique_ptr<WeightsInitializer> wInit = std::make_unique<Kaiming>(),
+      std::size_t randomSeed = 1);
   Neuron(const Neuron &neuron);
 
   float feedForward(const std::vector<float> &input);
@@ -39,8 +44,10 @@ private:
   std::unique_ptr<ActivationFunction> activationFunction;
 
 public:
-  Layer(std::size_t nInputs, std::size_t nOutputs,
-        std::unique_ptr<ActivationFunction> activationFunction);
+  Layer(
+      std::size_t nInputs, std::size_t nOutputs,
+      std::unique_ptr<ActivationFunction> activationFunction,
+      std::unique_ptr<WeightsInitializer> wInit = std::make_unique<Kaiming>());
   Layer(const Layer &layer);
 
   std::vector<float> feedForward(const std::vector<float> &input);
@@ -55,6 +62,7 @@ public:
 class NeuralNetwork {
 private:
   std::vector<Layer> layers;
+
   void backPropagation(const std::vector<float> &expected);
   void updateWeights(const std::vector<float> &input, float learningRate);
 
