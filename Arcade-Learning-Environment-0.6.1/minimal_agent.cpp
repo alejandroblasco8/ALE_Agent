@@ -10,10 +10,15 @@
 #include <cstdio>
 
 // Constants
-constexpr uint32_t maxSteps = 7500;
+constexpr uint32_t maxSteps = 20000;
 
 // File where RAM states and actions will be stored
 std::ofstream g_csvFile;
+
+// Global Variables
+size_t g_frameCount = 0;
+std::vector<uint8_t> g_prevRam(128, 0);
+bool g_firstFrame = true;
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Get info from RAM
@@ -31,29 +36,60 @@ int32_t getBallX(ALEInterface& alei) {
 ///////////////////////////////////////////////////////////////////////////////
 
 void printRam(ALEInterface& alei, Action act){
-
    std::system("clear");
 
    const ALERAM &ram = alei.getRAM();
-    // Column headers
+
+   // Show RAM
    std::printf("    ");
-   for (int col = 0; col < 16; ++col) {
+   for (int col = 0; col < 16; ++col)
       std::printf(" %3d", col);
-   }
    std::printf("\n");
 
-   // Values with row headers
    for (size_t i = 0; i < ram.size(); ++i) {
-       if (i % 16 == 0)
+      if (i % 16 == 0)
          std::printf("%3zu:", i);
       std::printf(" %3u", ram.get(i));
       if ((i + 1) % 16 == 0)
          std::printf("\n");
    }
-   if (ram.size() % 16 != 0)
+
+   // Show RAM(t) - RAM(t-1)
+   if (!g_firstFrame) {
+      std::printf("\n== Δ RAM (actual - anterior) ==\n    ");
+      for (int col = 0; col < 16; ++col)
+         std::printf(" %4d", col);
       std::printf("\n");
 
-   std::cout << "Action: " << action_to_string(act) << std::endl;
+      for (size_t i = 0; i < ram.size(); ++i) {
+         if (i % 16 == 0)
+            std::printf("%3zu:", i);
+         int delta = static_cast<int>(ram.get(i)) - static_cast<int>(g_prevRam[i]);
+         std::printf(" %+4d", delta);
+         if ((i + 1) % 16 == 0)
+            std::printf("\n");
+      }
+   }
+
+   // Mostrar ram.get(47) para ver los valores en binario, es candidata a contener la "i" utilizada en el calculo
+   // de las posiciones del jugador y enemigos, explicada en la memoria
+   /*std::printf("RAM[70] = %3u => Binario: ", ram.get(70));
+   for (int bit = 7; bit >= 0; --bit)
+      std::printf("%d", (ram.get(70) >> bit) & 1);
+   std::printf("\n");*/
+   
+
+
+   // Save prev RAM
+   for (size_t i = 0; i < ram.size(); ++i)
+      g_prevRam[i] = ram.get(i);
+
+   g_firstFrame = false;
+
+   // Show action and frame
+   std::cout << "\nAction: " << action_to_string(act) << std::endl;
+   std::cout << "Frame: " << g_frameCount << std::endl;
+   ++g_frameCount;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -133,18 +169,20 @@ int main(int argc, char **argv) {
    alei.setInt  ("random_seed", 0);
    alei.setFloat("repeat_action_probability", 0); //Si no se pone a 0 por defecto es 0.25. Es la probabilidad de que repita un movimiento sin importar lo que hayamos hecho
    alei.setBool ("display_screen", true);
-   alei.setBool ("sound", true);
+   alei.setInt("frame_skip", 1);
+   alei.setBool ("sound", false);
    alei.loadROM (argv[1]); //alei.loadROM (argv[1]);
 
-   // Open CSV file and write header
-   g_csvFile.open("ram_log.csv");
-   if (g_csvFile.is_open()) {
-      for (size_t i = 0; i < RAM_LENGTH; ++i) {
-         g_csvFile << "ram" << i;
-         g_csvFile << ',';
-      }
-      g_csvFile << "action\n";
+   // Checks if CSV file exists before writing header
+   bool writeHeader = true;
+   std::ifstream infile("ram_log.csv");
+   if (infile.good() && infile.peek() != std::ifstream::traits_type::eof()) {
+      writeHeader = false;
    }
+   infile.close();
+
+   // Open CSV file and write header
+   g_csvFile.open("ram_log.csv", std::ios::out | std::ios::app);
 
    // Init
    std::srand(static_cast<uint32_t>(std::time(0)));
