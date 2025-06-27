@@ -4,6 +4,8 @@ TARGET   := main
 
 SRC := \
     main.cpp \
+    data.cpp \
+    preprocess.cpp \
     src/perceptron.cpp \
     src/neural_network.cpp \
     src/activation_functions/step.cpp \
