@@ -41,4 +41,4 @@ si sirve:
 0,1,2,3,4,5,                    #puntuacion
 16,17,18,19,                 #posiciones jugador y enemigos
 21,                             #altura bala jugador
-37,38,39,40,41,42,43,44,45,46 #altura bala enemigos
+37,38,39,40,41,42,43,44,45,46 #altura y animacion bala enemigos
