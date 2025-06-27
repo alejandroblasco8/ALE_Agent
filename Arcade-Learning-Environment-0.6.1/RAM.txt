@@ -19,26 +19,30 @@ Bicho 1 es el que está mas abajo
 34          Animación bicho 2 (4-5-6-5-4-5-6...) (=0 cuando no hay bicho)
 35          Animación bicho 1 (4-5-6-5-4-5-6...) (=0 cuando no hay bicho)
 37-46       Posición y de las balas del enemigo
+50          Contador que va de 0 a 15 y se resetea
 63  (3F)    Cuando estmos vivos es 51, cuando estamos muertos es 3
-64          (32-40-48-40-32...)  Contadores del bicho 1                                                       ???
+64          (32-40-48-40-32...)  Contadores del bicho 1, establece cuando disparar                                                       ???
 66          (32-40-48-40-32...)  Contadores del bicho 1                                                ???
 69          Altura enemigo 3
 70          Altura enemigo 2
 71  (47)    Altura enemigo 1
+90          Contador que cambia cuando matas a un enemigo
 126 (FE)    Cambia de 91 a 78 cuando matas a un bicho
 
 
 necesito encontrar i para pasarle a las nn las posiciones de todos como entradas
 
 no sirve:
+0,1,2,3,4,5,                    #puntuacion
 29,30,31,33,34,35,64,66,    #animaciones
 28,                         #bala jugador
+50,
 63,                         #cuando estamos muertos
 69,70,71,                    #altura enemigos
+90,
 126
 
 si sirve:
-0,1,2,3,4,5,                    #puntuacion
 16,17,18,19,                 #posiciones jugador y enemigos
 21,                             #altura bala jugador
 37,38,39,40,41,42,43,44,45,46 #altura y animacion bala enemigos

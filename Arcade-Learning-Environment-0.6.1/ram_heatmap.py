@@ -6,19 +6,21 @@ import matplotlib.pyplot as plt
 
 # Celdas de RAM a ignorar porque no aportan información útil
 ram_ignore = set([
+    0,1,2,3,4,5,                    #puntuacion
     29,30,31,33,34,35,64,66,    #animaciones
     28,                         #bala jugador
+    50,
     63,                         #cuando estamos muertos
     69,70,71,                    #altura enemigos
+    90,
     126
 ])
 
 # Celdas de RAM que sí o sí quieres mantener aunque no estén en el top
 ram_keep = set([
-    0,1,2,3,4,5,                    #puntuacion
     16,17,18,19,                 #posiciones jugador y enemigos
     21,                             #altura bala jugador
-    37,38,39,40,41,42,43,44,45,46 #altura bala enemigos 
+    37,38,39,40,41,42,43,44,45,46 #altura y animacion bala enemigos
 ])
 
 # === PARÁMETROS DE ENTRADA ===
