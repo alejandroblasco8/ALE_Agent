@@ -10,7 +10,7 @@
 #include <cstdio>
 
 // Constants
-constexpr uint32_t maxSteps = 12000;
+constexpr uint32_t maxSteps = 20000;
 
 // File where RAM states and actions will be stored
 std::ofstream g_csvFile;
