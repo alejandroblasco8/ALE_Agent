@@ -70,6 +70,7 @@ public:
   NeuralNetwork(const std::vector<Layer> &layers);
   std::vector<float> feedForward(const std::vector<float> &input);
   std::vector<Layer>& getLayers() { return layers; }
+  void printWeights();
   void train(const std::vector<std::vector<float>> &inputs,
              const std::vector<int> &targets, int epochs, float learningRate);
 };

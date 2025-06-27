@@ -228,6 +228,28 @@ void NeuralNetwork::backPropagation(const std::vector<float> &expected) {
   }
 }
 
+void NeuralNetwork::printWeights() {
+  std::cout << "{\n";
+  for (size_t l = 0; l < layers.size(); ++l) {
+    auto& layer = layers[l];
+    auto& neurons = layer.getNeurons();
+    std::cout << "  {\n";
+    for (auto& neuron : neurons) {
+      auto& w = neuron.getWeights();
+      std::cout << "    {";
+      for (size_t i = 0; i < w.size(); ++i) {
+        std::cout << w[i];
+        if (i < w.size() - 1) std::cout << ", ";
+      }
+      std::cout << "},\n";
+    }
+    std::cout << "  }";
+    if (l < layers.size() - 1) std::cout << ",";
+    std::cout << "\n";
+  }
+  std::cout << "};\n";
+}
+
 void NeuralNetwork::updateWeights(const std::vector<float> &input,
                                   float learningRate) {
   std::vector<float> layerInput = input;
@@ -291,6 +313,10 @@ void NeuralNetwork::train(const std::vector<std::vector<float>> &inputs,
       updateWeights(inputs[i], learningRate);
     }
   }
+
+  std::cout << "Pesos finales entrenados" << std::endl;
+  printWeights();
+
 }
 
 // END NEURAL NETWORK

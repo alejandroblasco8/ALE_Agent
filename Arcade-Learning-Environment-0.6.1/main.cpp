@@ -155,10 +155,12 @@ void neuralNetwork() {
   }
 
   vector<Layer> layers = {
-      Layer(128, 6, make_unique<Softmax>()),
+    Layer(128, 6, make_unique<ReLU>()),
+    Layer(6, 6, make_unique<Softmax>())
   };
 
-  const int epochs = 2;
+
+  const int epochs = 1;
   const float lr = 0.001;
 
   NeuralNetwork nn(layers);
