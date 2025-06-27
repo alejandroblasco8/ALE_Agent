@@ -14,6 +14,11 @@
 
 using namespace std;
 
+void shuffleData(vector<vector<float>> &, vector<int> &, unsigned);
+void loadAndData(const std::string &, std::vector<std::vector<float>> &,
+                 std::vector<int> &);
+void loadData(const string &, vector<vector<float>> &, vector<int> &, size_t);
+
 size_t indexOfMax(const vector<float> &v) {
   if (v.empty()) {
     throw runtime_error("empty vector");
@@ -50,119 +55,6 @@ vector<double> accuracy(const vector<int> &preds, const vector<int> &targets,
   }
 
   return acc;
-}
-
-void shuffleData(vector<vector<float>> &inputs, vector<int> &targets,
-                 unsigned seed = random_device{}()) {
-  if (inputs.size() != targets.size()) {
-    throw runtime_error("size mismatch");
-  }
-
-  mt19937 rng(seed);
-
-  for (size_t i = inputs.size(); i-- > 1;) {
-    uniform_int_distribution<size_t> dist(0, i);
-    size_t j = dist(rng);
-
-    swap(inputs[i], inputs[j]);
-    swap(targets[i], targets[j]);
-  }
-}
-
-void loadAndData(const string &filename, vector<vector<float>> &inputs,
-                 vector<int> &targets) {
-  ifstream file(filename);
-
-  if (!file) {
-    throw runtime_error("Could not open " + filename);
-  }
-
-  string line;
-  bool firstLine = true;
-
-  while (getline(file, line)) {
-    if (firstLine) {
-      firstLine = false;
-      continue;
-    }
-
-    stringstream ss(line);
-    string column;
-    vector<float> row;
-
-    if (!getline(ss, column, ',')) {
-      throw runtime_error("missing Value_A in: " + line);
-    }
-    row.push_back(stof(column));
-
-    if (!getline(ss, column, ',')) {
-      throw runtime_error("missing Value_B in: " + line);
-    }
-    row.push_back(stof(column));
-
-    if (!getline(ss, column, ',')) {
-      throw runtime_error("missing AND_Gate in: " + line);
-    }
-
-    int label;
-    if (column == "zero") {
-      label = 0;
-    } else if (column == "one") {
-      label = 1;
-    } else {
-      continue;
-    }
-
-    inputs.push_back(move(row));
-    targets.push_back(label);
-  }
-}
-
-void loadIrisData(const string &filename, vector<vector<float>> &inputs,
-                  vector<int> &targets) {
-  ifstream file(filename);
-  if (!file) {
-    throw runtime_error("Could not open " + filename);
-  }
-
-  unordered_map<string, int> label2id;
-  int nextId = 0;
-  string line;
-  bool firstLine = true;
-
-  while (getline(file, line)) {
-    if (firstLine) {
-      firstLine = false;
-      continue;
-    }
-
-    stringstream ss(line);
-    string column;
-
-    getline(ss, column, ',');
-    vector<float> row;
-
-    for (int i = 0; i < 4; ++i) {
-      if (!getline(ss, column, ',')) {
-        throw runtime_error("missing features in: " + line);
-      }
-
-      row.push_back(stof(column));
-    }
-
-    if (!getline(ss, column, ',')) {
-      throw runtime_error("missing label in: " + line);
-    }
-
-    int label = label2id.try_emplace(column, nextId).first->second;
-
-    if (label == nextId) {
-      nextId++;
-    }
-
-    inputs.push_back(move(row));
-    targets.push_back(label);
-  }
 }
 
 vector<int> predictAll(NeuralNetwork &net,
@@ -250,32 +142,32 @@ void neuralNetwork() {
   vector<int> targets;
 
   try {
-    loadIrisData("iris.csv", inputs, targets);
+    loadData("ram2.csv", inputs, targets, 128);
     shuffleData(inputs, targets, 1);
 
     cout << "Loaded " << inputs.size() << " samples with " << inputs[0].size()
          << " features." << endl;
+    cout << "Number of unique targets: "
+         << *std::max_element(targets.begin(), targets.end()) + 1 << '\n';
   } catch (const exception &e) {
     cerr << "Error: " << e.what() << endl;
     exit(1);
   }
 
   vector<Layer> layers = {
-      Layer(4, 12, make_unique<ReLU>()),
-      Layer(12, 6, make_unique<ReLU>()),
-      Layer(6, 3, make_unique<Softmax>()),
+      Layer(128, 6, make_unique<Softmax>()),
   };
 
-  const int epochs = 100;
-  const float lr = 0.01;
+  const int epochs = 2;
+  const float lr = 0.001;
 
   NeuralNetwork nn(layers);
   testNeuralNetork(nn, inputs, targets, epochs, lr);
 }
 
 int main() {
-  perceptron();
-  // neuralNetwork();
+  // perceptron();
+  neuralNetwork();
 
   return 0;
 }
